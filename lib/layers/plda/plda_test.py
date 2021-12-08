@@ -6,7 +6,11 @@ import numpy as np
 from lib.layers import PLDA
 from lib.testdata import RefPldaModel, RefXVectors, RefPldaScores
 
-tolerance = 1e-5
+# RMSE tolerance. In Kaldi, we PLDA weights are stored as double (float64)
+# values. But if we want to us tflite, we need to use float32 values. This
+# increases the RMSE between kaldi and tflite a little bit but is still within
+# this limit which seems reasonable enough.
+tolerance = 2e-4
 
 
 class TestPLDALayer(unittest.TestCase):
@@ -17,12 +21,14 @@ class TestPLDALayer(unittest.TestCase):
     def getPldaLayer(self):
         return PLDA(
             RefPldaModel.dim, RefPldaModel.mean, RefPldaModel.transformMat, RefPldaModel.psi,
+            return_transformed=True, normalize_length=True, simple_length_norm=False,
+            dtype=np.float32,
         )
 
     def test_WithoutPCA(self):
         plda = self.getPldaLayer()
         inputs = RefXVectors.pldaInput()
-        scores, transformed = plda(inputs, return_transformed=True)
+        scores, transformed = plda(inputs)
 
         refTransformed = RefXVectors.pldaTransformed(withoutPCA=True)
         refScores = RefPldaScores.scores(withoutPCA=True)
@@ -32,8 +38,11 @@ class TestPLDALayer(unittest.TestCase):
         self.assertEqual(refScores.shape, scores.shape)
 
         # Expecting difference between reference and layer output to be within reference.
-        self.assertTrue(self.rmse(refTransformed, transformed) <= tolerance)
-        self.assertTrue(self.rmse(refScores, scores) <= tolerance)
+        err = self.rmse(refTransformed, transformed)
+        self.assertTrue(err <= tolerance, f"rmse={err}")
+
+        err = self.rmse(refScores, scores)
+        self.assertTrue( err <= tolerance, f"rmse={err}")
 
 
 if __name__ == "__main__":

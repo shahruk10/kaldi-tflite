@@ -47,7 +47,7 @@ function tdnn_single_layer() {
 
     # The frame-level layers
     input dim=${feat_dim} name=input
-    relu-batchnorm-layer name=tdnn1 input=Append${layer_context} dim=${layer_units}
+    relu-layer name=tdnn1 input=Append${layer_context} dim=${layer_units}
     output name=output
 EOF
 }
