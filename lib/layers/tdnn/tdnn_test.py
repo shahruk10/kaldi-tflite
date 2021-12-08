@@ -14,17 +14,17 @@ class TestTDNNLayer(unittest.TestCase):
     def rmse(self, ref, val):
         return np.sqrt(np.mean(np.power(ref - val, 2.0)))
 
-    def getTdnnLayer(self, input_shape):        
+    def getTdnnSingleLayer(self, input_shape: Tuple[int, int]) -> TDNN:
         tdnn = TDNN.from_config(RefTdnnSingleLayer.cfg)
         tdnn.build(input_shape)
         tdnn.set_weights(RefTdnnSingleLayer.weights())
         return tdnn
 
-    def test_Output(self):
+    def test_SingleLayer(self):
         inputs = RefTdnnSingleLayer.inputs
         wantOutputs = RefTdnnSingleLayer.outputs
 
-        tdnn = self.getTdnnLayer(inputs.shape)
+        tdnn = self.getTdnnSingleLayer(inputs.shape)
         gotOutputs = tdnn(inputs)
 
         # Expecting shapes of reference and layer output to be the same.

@@ -4,7 +4,6 @@ import os
 import numpy as np
 
 from lib.io import KaldiNnet3Reader
-from lib.layers import reshapeKaldiTdnnWeights
 
 class RefTdnnSingleLayer:
 
@@ -47,8 +46,6 @@ class RefTdnnSingleLayer:
 
     @classmethod
     def weights(cls) -> dict:
-        units = cls.cfg["units"]
-        kernelWidth = len(cls.cfg["context"])
-        kernel = reshapeKaldiTdnnWeights(cls.mdl.components[0]["params"], units, kernelWidth)
+        kernel = cls.mdl.components[0]["params"]
         bias = cls.mdl.components[0]["bias"]
         return (kernel, bias)
