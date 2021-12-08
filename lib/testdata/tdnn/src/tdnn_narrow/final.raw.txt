@@ -29,10 +29,10 @@ output-node name=output input=output.affine objective=linear
 <RankIn> 8 <RankOut> 3 <UpdatePeriod> 4 <NumSamplesHistory> 2000 <Alpha> 4 </NaturalGradientAffineComponent> 
 <ComponentName> tdnn1.relu <RectifiedLinearComponent> <Dim> 5 <ValueAvg>  [ ]
 <DerivAvg>  [ ]
-<Count> 10.0 <OderivRms>  [ ]
+<Count> 10 <OderivRms>  [ ]
 <OderivCount> 0 <NumDimsSelfRepaired> 0 <NumDimsProcessed> 0 <SelfRepairScale> 1e-05 </RectifiedLinearComponent> 
-<ComponentName> tdnn1.batchnorm <BatchNormComponent> <Dim> 5 <BlockDim> 5 <Epsilon> 0.001 <TargetRms> 1 <TestMode> F <Count> 10.0 <StatsMean>  [ 0 0 0 0 0 ]
-<StatsVar>  [ 1.0 1.0 1.0 1.0 1.0 ]
+<ComponentName> tdnn1.batchnorm <BatchNormComponent> <Dim> 5 <BlockDim> 5 <Epsilon> 0.001 <TargetRms> 1 <TestMode> T <Count> 10 <StatsMean>  [ 5.525478 5.03804 2.278874 5.210002 7.274048 ]
+<StatsVar>  [ 3.806511 3.479012 0.8636341 3.843342 5.611824 ]
 </BatchNormComponent> 
 <ComponentName> tdnn2.affine <NaturalGradientAffineComponent> <MaxChange> 0.75 <LearningRate> 0.001 <LinearParams>  [
   -0.04512721 0.00186575 0.1797781 0.5000758 -0.2908441 0.1668068 -0.1956375 -0.001371455 -0.1249213 0.008259594 0.218361 0.1446064 -0.05833546 0.2178984 -0.5882257 
@@ -47,10 +47,10 @@ output-node name=output input=output.affine objective=linear
 <RankIn> 8 <RankOut> 4 <UpdatePeriod> 4 <NumSamplesHistory> 2000 <Alpha> 4 </NaturalGradientAffineComponent> 
 <ComponentName> tdnn2.relu <RectifiedLinearComponent> <Dim> 8 <ValueAvg>  [ ]
 <DerivAvg>  [ ]
-<Count> 10.0 <OderivRms>  [ ]
+<Count> 10 <OderivRms>  [ ]
 <OderivCount> 0 <NumDimsSelfRepaired> 0 <NumDimsProcessed> 0 <SelfRepairScale> 1e-05 </RectifiedLinearComponent> 
-<ComponentName> tdnn2.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> F <Count> 10.0 <StatsMean> [ -0.3126723 -0.07071986 -0.1102077 -0.01302463 -0.3115547 0.06287698 0.1327096 0.0923905 ]  
-<StatsVar>  [ 0.43609902 0.49286133 -0.08216596 0.27845982 0.31556758 0.08583137 0.02987163 0.0693356 ]
+<ComponentName> tdnn2.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> T <Count> 10 <StatsMean>  [ 5.525478 5.03804 2.278874 5.210002 7.274048 2.927882 3.962219 4.214614 ]
+<StatsVar>  [ 3.806511 3.479012 0.8636341 3.843342 5.611824 1.306689 2.325208 2.600582 ]
 </BatchNormComponent> 
 <ComponentName> tdnn3.affine <NaturalGradientAffineComponent> <MaxChange> 0.75 <LearningRate> 0.001 <LinearParams>  [
   0.1735435 0.3577363 -0.06200178 0.3333988 0.2439802 0.08663209 0.2970491 0.1092892 -0.0743224 0.1115896 0.2253682 0.08286656 -0.1470744 0.4329704 0.04559321 -0.2484298 -0.09268007 0.1388071 0.04322106 -0.04351111 0.2321791 0.1778221 -0.08887652 -0.2046162 
@@ -65,10 +65,10 @@ output-node name=output input=output.affine objective=linear
 <RankIn> 12 <RankOut> 4 <UpdatePeriod> 4 <NumSamplesHistory> 2000 <Alpha> 4 </NaturalGradientAffineComponent> 
 <ComponentName> tdnn3.relu <RectifiedLinearComponent> <Dim> 8 <ValueAvg>  [ ]
 <DerivAvg>  [ ]
-<Count> 10.0 <OderivRms>  [ ]
+<Count> 10 <OderivRms>  [ ]
 <OderivCount> 0 <NumDimsSelfRepaired> 0 <NumDimsProcessed> 0 <SelfRepairScale> 1e-05 </RectifiedLinearComponent> 
-<ComponentName> tdnn3.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> F <Count> 10.0 <StatsMean> [ -0.3126723 -0.07071986 -0.1102077 -0.01302463 -0.3115547 0.06287698 0.1327096 0.0923905 ]  
-<StatsVar>  [ 0.43609902 0.49286133 -0.08216596 0.27845982 0.31556758 0.08583137 0.02987163 0.0693356 ]
+<ComponentName> tdnn3.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> T <Count> 10 <StatsMean>  [ 5.525478 5.03804 2.278874 5.210002 7.274048 2.927882 3.962219 4.214614 ]
+<StatsVar>  [ 3.806511 3.479012 0.8636341 3.843342 5.611824 1.306689 2.325208 2.600582 ]
 </BatchNormComponent> 
 <ComponentName> tdnn4.affine <NaturalGradientAffineComponent> <MaxChange> 0.75 <LearningRate> 0.001 <LinearParams>  [
   0.1887785 0.7816643 -0.2720307 0.4856474 -0.1846417 -0.4450786 0.1717921 0.3962565 
@@ -83,10 +83,10 @@ output-node name=output input=output.affine objective=linear
 <RankIn> 4 <RankOut> 4 <UpdatePeriod> 4 <NumSamplesHistory> 2000 <Alpha> 4 </NaturalGradientAffineComponent> 
 <ComponentName> tdnn4.relu <RectifiedLinearComponent> <Dim> 8 <ValueAvg>  [ ]
 <DerivAvg>  [ ]
-<Count> 10.0 <OderivRms>  [ ]
+<Count> 10 <OderivRms>  [ ]
 <OderivCount> 0 <NumDimsSelfRepaired> 0 <NumDimsProcessed> 0 <SelfRepairScale> 1e-05 </RectifiedLinearComponent> 
-<ComponentName> tdnn4.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> F <Count> 10.0 <StatsMean> [ -0.3126723 -0.07071986 -0.1102077 -0.01302463 -0.3115547 0.06287698 0.1327096 0.0923905 ]  
-<StatsVar>  [ 0.43609902 0.49286133 -0.08216596 0.27845982 0.31556758 0.08583137 0.02987163 0.0693356 ]
+<ComponentName> tdnn4.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> T <Count> 10 <StatsMean>  [ 5.525478 5.03804 2.278874 5.210002 7.274048 2.927882 3.962219 4.214614 ]
+<StatsVar>  [ 3.806511 3.479012 0.8636341 3.843342 5.611824 1.306689 2.325208 2.600582 ]
 </BatchNormComponent> 
 <ComponentName> tdnn5.affine <NaturalGradientAffineComponent> <MaxChange> 0.75 <LearningRate> 0.001 <LinearParams>  [
   -0.2769823 -0.134262 0.409532 0.1670311 -0.8215401 -0.3783705 0.4978216 0.1224703 
@@ -101,10 +101,10 @@ output-node name=output input=output.affine objective=linear
 <RankIn> 4 <RankOut> 4 <UpdatePeriod> 4 <NumSamplesHistory> 2000 <Alpha> 4 </NaturalGradientAffineComponent> 
 <ComponentName> tdnn5.relu <RectifiedLinearComponent> <Dim> 8 <ValueAvg>  [ ]
 <DerivAvg>  [ ]
-<Count> 10.0 <OderivRms>  [ ]
+<Count> 10 <OderivRms>  [ ]
 <OderivCount> 0 <NumDimsSelfRepaired> 0 <NumDimsProcessed> 0 <SelfRepairScale> 1e-05 </RectifiedLinearComponent> 
-<ComponentName> tdnn5.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> F <Count> 10.0 <StatsMean> [ -0.3126723 -0.07071986 -0.1102077 -0.01302463 -0.3115547 0.06287698 0.1327096 0.0923905 ]  
-<StatsVar>  [ 0.43609902 0.49286133 -0.08216596 0.27845982 0.31556758 0.08583137 0.02987163 0.0693356 ]
+<ComponentName> tdnn5.batchnorm <BatchNormComponent> <Dim> 8 <BlockDim> 8 <Epsilon> 0.001 <TargetRms> 1 <TestMode> T <Count> 10 <StatsMean>  [ 5.525478 5.03804 2.278874 5.210002 7.274048 2.927882 3.962219 4.214614 ]
+<StatsVar>  [ 3.806511 3.479012 0.8636341 3.843342 5.611824 1.306689 2.325208 2.600582 ]
 </BatchNormComponent> 
 <ComponentName> output.affine <NaturalGradientAffineComponent> <MaxChange> 1.5 <LearningRate> 0.001 <LinearParams>  [
   -0.3126723 -0.07071986 -0.1102077 -0.01302463 -0.3115547 0.06287698 0.1327096 0.09239054 ]
