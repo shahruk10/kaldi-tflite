@@ -61,7 +61,7 @@ class TDNN(Layer):
             Initializer to use when randomly initializing bias vector, by
             default GlorotUniform (also called Xavier uniform initializer).
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Auto set if set to None.
             By default None.
         """
         super(TDNN, self).__init__(trainable=True, name=name, **kwargs)
