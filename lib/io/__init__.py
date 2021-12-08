@@ -2,4 +2,4 @@
 
 from .kaldi.object_reader import KaldiObjReader
 from .kaldi.nnet3_reader import KaldiNnet3Reader
-from .plda import KaldiPldaLoader
+from .kaldi.plda_reader import KaldiPldaReader

@@ -3,21 +3,21 @@
 import unittest
 import numpy as np
 
-from lib.io import KaldiPldaLoader
+from lib.io import KaldiPldaReader
 from lib.testdata import RefPldaModel
 
 
 tolerance = 1e-9
 
 
-class TestKaldiPLDALoader(unittest.TestCase):
+class TestKaldiPldaReader(unittest.TestCase):
 
     def rmse(self, ref, val):
         return np.sqrt(np.mean(np.power(ref - val, 2.0)))
 
     def test_Read(self):
         # Loading PLDA model.
-        plda = KaldiPldaLoader("lib/testdata/plda")
+        plda = KaldiPldaReader("lib/testdata/plda", True)
 
         # Expecting shapes of parsed data to be the same as reference.
         self.assertEqual(RefPldaModel.mean.shape, plda.mean.shape)
