@@ -1,0 +1,6 @@
+    # please note that it is important to have input layer with the name=input
+
+    # The frame-level layers
+    input dim=30 name=input
+    relu-layer name=tdnn1 input=Append(-3, -1, 0, 1) dim=32
+    output name=output
