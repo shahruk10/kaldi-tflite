@@ -1,0 +1,14 @@
+# This file was created by the command:
+# /home/shahruk/git/kaldi/egs/wsj/s5/steps/nnet3/xconfig_to_configs.py --xconfig-file /media/shahruk/terra2x/cobalt2/exp/20211128-plda-in-tensorflow/kaldi-xvector-diarization-tflite/lib/testdata/tdnn/src/tdnn_narrow/configs/network.xconfig --config-dir /media/shahruk/terra2x/cobalt2/exp/20211128-plda-in-tensorflow/kaldi-xvector-diarization-tflite/lib/testdata/tdnn/src/tdnn_narrow/configs/
+# It contains the same content as ./xconfig but it was parsed,
+# default config values were set, 
+# and Descriptors (input=xxx) were normalized.
+# See also ./xconfig.expanded.1
+
+input name=input dim=3
+relu-batchnorm-layer name=tdnn1 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=5 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=Append(Offset(input, -2), Offset(input, -1), input, Offset(input, 1), Offset(input, 2)) l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+relu-batchnorm-layer name=tdnn2 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=8 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=Append(Offset(tdnn1, -2), tdnn1, Offset(tdnn1, 2)) l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+relu-batchnorm-layer name=tdnn3 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=8 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=Append(Offset(tdnn2, -3), tdnn2, Offset(tdnn2, 3)) l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+relu-batchnorm-layer name=tdnn4 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=8 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=tdnn3 l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+relu-batchnorm-layer name=tdnn5 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=8 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=tdnn4 l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+output-layer name=output bias-stddev=0.0 bottleneck-dim=-1 dim=1 include-log-softmax=True input=tdnn5 l2-regularize= learning-rate-factor= max-change=1.5 ng-affine-options= ng-linear-options= objective-type=linear orthonormal-constraint=1.0 output-delay=0 param-stddev=0.0
