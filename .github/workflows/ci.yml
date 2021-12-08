@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+  
+  release:
+    types: [published, created]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.11
+
+    - name: Install dependencies
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+        conda env update --file environment.yml --name base
+
+    - name: Run linter
+      run: |
+        pylint $GITHUB_WORKSPACE/lib
+
+    - name: Run tests
+      run: |
+        PYTHONPATH=$GITHUB_WORKSPACE pytest
