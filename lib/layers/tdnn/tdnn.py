@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-from typing import Tuple
+from typing import Tuple, Iterable
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.initializers import Initializer, GlorotUniform
+
+from lib.layers.tdnn.utils import reshapeKaldiTdnnWeights
 
 
 class TDNN(Layer):
@@ -153,6 +156,50 @@ class TDNN(Layer):
 
         return config
 
+    def set_weights(self, weights: Iterable[np.ndarray], order: str = "kaldi"):
+        """
+        Sets the weights of the layer, from numpy arrays. The weights can either
+        be in the shape and order kaldi provides them in (2D matrices for kernels
+        and 1D vector for biases) or how tensorflow expects them (output of
+        `get_weights()`).
+
+        Parameters
+        ----------
+        weights : Iterable[np.ndarray]
+            Kernel and Bias weights as a list of numpy arrays. If the layer is
+            configured to not use bias vector, only kernel weights are expected
+            in the list.
+        order : str, optional
+            The order the weights of the kernel are arranged in - either "kaldi"
+            or "tensorflow", by default "kaldi".
+
+        Raises
+        ------
+        ValueError
+            If the "order" is not "kaldi" or "tensorflow".
+            if the number of weights in the weight list is unexpected.
+            If the shape of the weights do not match expected shapes.
+        """
+        if order not in ["kaldi", "tensorflow"]:
+            raise ValueError(f"expected 'order' to be either 'kaldi' or 'tensorflow', got {order}")
+
+        if len(weights) == 0:
+            raise ValueError(f"expected a weight list of at least length 2, got 0")
+
+        if self.useBias:
+            if len(weights) != 2:
+                raise ValueError(f"expected a weight list of length 2, got {len(weights)}")
+
+        kernel = weights[0]
+        if order == "kaldi":
+            kernel = reshapeKaldiTdnnWeights(kernel, self.units, self.kernelWidth)
+
+        if self.useBias:
+            bias = weights[1]
+            return super(TDNN, self).set_weights([kernel, bias])
+
+        return super(TDNN, self).set_weights([kernel])
+
     def getStartEndSteps(self, inputTimesteps: int) -> Tuple[int, int]:
 
         start = 0
@@ -180,7 +227,6 @@ class TDNN(Layer):
 
         return indices
 
-    @tf.function
     def call(self, inputs):
 
         inputShape = tf.shape(inputs)
