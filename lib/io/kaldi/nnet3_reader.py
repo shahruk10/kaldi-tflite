@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-from typing import Tuple
-import numpy as np
-
 from lib.io import KaldiObjReader
 
 
@@ -52,7 +49,7 @@ class KaldiNnet3Reader(KaldiObjReader):
 
         # Reading number of components in the model.
         self.expectToken("<NumComponents>")
-        numComponents = self.readBasicType(np.int32)
+        numComponents = self.readInt()
 
         assert numComponents > 0 and numComponents < 100000, \
             f"expected between 1 and 9999 components, got {numComponents}"

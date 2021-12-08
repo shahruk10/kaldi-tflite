@@ -209,7 +209,7 @@ class PLDA(Layer):
 
     @tf.function
     def call(self, inputs):
-        inputs = tf.cast(inputs, dtype=self.paramDtype)
+        inputs = tf.cast(inputs, self.paramDtype)
         transformed = self.transformVector(inputs)
         scores = self.logLikelihoodRatio(transformed)
 
