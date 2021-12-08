@@ -17,7 +17,7 @@ class TestKaldiPldaReader(unittest.TestCase):
 
     def test_Read(self):
         # Loading PLDA model.
-        plda = KaldiPldaReader("lib/testdata/plda", True)
+        plda = KaldiPldaReader("lib/testdata/plda/plda", True)
 
         # Expecting shapes of parsed data to be the same as reference.
         self.assertEqual(RefPldaModel.mean.shape, plda.mean.shape)
