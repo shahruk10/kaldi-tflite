@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-from typing import Tuple
-import numpy as np
-
 from lib.io import KaldiObjReader
 
 class KaldiPldaReader(KaldiObjReader):

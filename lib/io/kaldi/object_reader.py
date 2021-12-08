@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, Union, Iterable
+from typing import Union, Iterable
 import numpy as np
 
 
