@@ -12,6 +12,19 @@ from lib.layers.tdnn.utils import reshapeKaldiTdnnWeights
 
 class TDNN(Layer):
 
+    """
+    This layer implements a kaldi styled time delayed neural network layer.
+    It's implemented to produce the same output as a TDNN layer implemented
+    in Kaldi's Nnet3 framework.
+
+    Asymmetrical left / right context is allowed just like Kaldi's splicing
+    specification (e.g. context = [-3, -1, 0, 1]).
+
+    This layer's weights can be intialized using the `<LinearParams>` and
+    `<BiasParams>` of tdnn.affine components with the same number of units
+    and context configuration as this layer.
+    """
+
     def __init__(self,
                  units: int,
                  context: list = [0],
@@ -24,16 +37,7 @@ class TDNN(Layer):
                  name: str = None,
                  **kwargs):
         """
-        This layer implements a kaldi styled time delayed neural network layer.
-        It's implemented to produce the same output as a TDNN layer implemented
-        in Kaldi's Nnet3 framework. 
-
-        Asymmetrical left / right context is allowed just like Kaldi's splicing
-        specification (e.g. context = [-3, -1, 0, 1]).
-
-        This layer's weights can be intialized using the `<LinearParams>` and
-        `<BiasParams>` of tdnn.affine components with the same number of units
-        and context configuration as this layer. 
+        Instantiates a TDNN layer with the given configuration.
 
         Parameters
         ----------
@@ -156,7 +160,7 @@ class TDNN(Layer):
 
         return config
 
-    def set_weights(self, weights: Iterable[np.ndarray], order: str = "kaldi"):
+    def set_weights(self, weights: Iterable[np.ndarray], fmt: str = "kaldi"):
         """
         Sets the weights of the layer, from numpy arrays. The weights can either
         be in the shape and order kaldi provides them in (2D matrices for kernels
@@ -169,9 +173,9 @@ class TDNN(Layer):
             Kernel and Bias weights as a list of numpy arrays. If the layer is
             configured to not use bias vector, only kernel weights are expected
             in the list.
-        order : str, optional
-            The order the weights of the kernel are arranged in - either "kaldi"
-            or "tensorflow", by default "kaldi".
+        fmt : str, optional
+            The format in whichh the weights of the kernel are arranged in -
+            either "kaldi" or "tensorflow", by default "kaldi".
 
         Raises
         ------
@@ -180,8 +184,9 @@ class TDNN(Layer):
             if the number of weights in the weight list is unexpected.
             If the shape of the weights do not match expected shapes.
         """
-        if order not in ["kaldi", "tensorflow"]:
-            raise ValueError(f"expected 'order' to be either 'kaldi' or 'tensorflow', got {order}")
+        fmt = fmt.lower()
+        if fmt not in ["kaldi", "tensorflow"]:
+            raise ValueError(f"expected 'fmt' to be either 'kaldi' or 'tensorflow', got {fmt}")
 
         if len(weights) == 0:
             raise ValueError(f"expected a weight list of at least length 2, got 0")
@@ -191,7 +196,7 @@ class TDNN(Layer):
                 raise ValueError(f"expected a weight list of length 2, got {len(weights)}")
 
         kernel = weights[0]
-        if order == "kaldi":
+        if fmt == "kaldi":
             kernel = reshapeKaldiTdnnWeights(kernel, self.units, self.kernelWidth)
 
         if self.useBias:

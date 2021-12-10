@@ -8,7 +8,7 @@
 # - e: exit immediately when a pipeline fails
 # - u: treat unset variables as an error
 # - o pipefail: return value of rightmost command in a pipeline
-set -euo
+set -euo pipefail
 
 # Get the top level directory.
 TOP=$(git rev-parse --show-toplevel)
