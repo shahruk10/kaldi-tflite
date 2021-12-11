@@ -4,7 +4,9 @@ import os
 import unittest
 import numpy as np
 import yaml
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
+from lib.models import SavedModel2TFLite
 from lib.models.kaldi import SequentialModel, downloadModel
 from lib.testdata import RefKaldiXVectorModels
 
@@ -21,6 +23,32 @@ class TestKaldiSequentialModel(unittest.TestCase):
         norm = np.linalg.norm(want) * np.linalg.norm(got)
         cos = np.divide(dot, norm)
         return 1.0 - cos
+
+    def test_ConvertTFLite(self):
+
+        kaldiMdlDir = "data/kaldi_models"
+        cfgDir = os.path.join(kaldiMdlDir, "configs")
+
+        # Model configs to build and convert to TF Lite models.
+        configs = [
+            os.path.join(cfgDir, "0008_sitw_v2_1a.yml"),
+            os.path.join(cfgDir, "0006_callhome_diarization_v2_1a.yml"),
+        ]
+
+        for cfgPath in configs:
+            with self.subTest(model=cfgPath):
+                # Loading config file.
+                with open(cfgPath) as f:
+                    cfg = yaml.safe_load(f)
+
+                # Creating model.
+                mdl = SequentialModel(cfg["model_config"])
+
+                # Saving model and converting to TF Lite.
+                with TemporaryDirectory() as mdlPath, \
+                        NamedTemporaryFile(suffix='.tflite') as tflitePath:
+                    mdl.save(mdlPath)
+                    SavedModel2TFLite(mdlPath, tflitePath.name)
 
     def test_Sequential(self):
 
