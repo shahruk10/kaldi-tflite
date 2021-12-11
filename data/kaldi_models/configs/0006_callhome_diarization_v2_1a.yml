@@ -1,0 +1,43 @@
+
+name: "0006_callhome_diarization_v2_1a"
+description: "An xvector DNN trained on augmented Switchboard and NIST SREs."
+sample_rate: 8000
+
+download:
+  link: "https://kaldi-asr.org/models/6/0006_callhome_diarization_v2_1a.tar.gz"
+  hash: "4ebcd87c4239de073c19ad5a0d782b60d10344d4d2d5a58cc39fb91ccbbbb461"
+
+model_config:
+  type: "sequential"
+  layers:
+    - name: "input"
+      type: "input"
+      shape: [null, null, 23]
+
+    - name: "tdnn1"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-2, -1, 0, 1 ,2] }
+
+    - name: "tdnn2"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-2, 0, 2] }
+
+    - name: "tdnn3"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-3, 0, 3] }
+ 
+    - name: "tdnn4"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [0] }
+
+    - name: "tdnn5"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 1500, context: [0] }
+
+    - name: "stats"
+      type: "stats_pooling"
+      cfg: { left_context: 0, right_context: 400, include_std: true, reduce_time_axis: true }
+
+    - name: "tdnn6"
+      type: "affine"
+      cfg: { units: 128, context: [0] }

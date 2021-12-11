@@ -1,0 +1,48 @@
+
+name: "0008_sitw_v2_1a"
+description: "Pre-trained x-vector model trained on augmented VoxCeleb 1 and VoxCeleb 2."
+sample_rate: 16000
+
+download:
+  link: "https://kaldi-asr.org/models/8/0008_sitw_v2_1a.tar.gz"
+  hash: "0e056069866c53421751fb58dabe1f1dc3dec05ca196aa67b970d9ec261bda60"
+
+model_config:
+  type: "sequential"
+  layers:
+    - name: "input"
+      type: "input"
+      shape: [null, null, 30]
+
+    - name: "tdnn1"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-2, -1, 0, 1 ,2] }
+
+    - name: "tdnn2"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-2, 0, 2] }
+
+    - name: "tdnn3"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [-3, 0, 3] }
+ 
+    - name: "tdnn4"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 512, context: [0] }
+
+    - name: "tdnn5"
+      type: [ "affine", "relu", "batchnorm" ]
+      cfg: { units: 1500, context: [0] }
+
+    - name: "stats"
+      type: "stats_pooling"
+      cfg: { left_context: 0, right_context: 10000, include_std: true, reduce_time_axis: true }
+
+    - name: "tdnn6"
+      type: "affine"
+      cfg: { units: 512, context: [0] }
+
+    ## We ignore this layer since output will be taken from tdnn6.affine.
+    # - name: "tdnn7"
+    #   type: "affine"
+    #   cfg: { units: 512, context: [0] }
