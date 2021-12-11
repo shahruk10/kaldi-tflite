@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+import re
+import numpy as np
+from typing import Iterable
+
 from lib.io import KaldiObjReader
 
 
@@ -234,3 +238,75 @@ class KaldiNnet3Reader(KaldiObjReader):
                 token = token[:len(token) - len(suffix)]
 
         return token
+
+    def getComponent(self, name: str) -> Iterable[dict]:
+        """
+        Returns the component data of the components that
+        match the given name / pattern.
+
+        Parameters
+        ----------
+        name : str
+            Name of component to lookup. Could also be a regex pattern
+            (e.g. "tdnn1.*"). If multiple components match the pattern,
+            all their data are concatenated in returned list. The order
+            is the same one they appear in the model.
+
+        Returns
+        -------
+        Iterable[dict]
+            Data of components matching given name / pattern.
+        """
+        matchingComponents = []
+        for c in self.components:
+            cName = c.get("name", None)
+            if cName is None:
+                continue
+            if re.match(rf"{name}", cName):
+                matchingComponents.append(c)
+
+        return matchingComponents
+
+    def getWeights(self, name: str) -> Iterable[np.ndarray]:
+        """
+        Returns the loaded weights of the component with the given
+        name if it has any. If it's a component that does not have
+        any weights, such as a "<StatisticsExtractionComponent>",
+        an empty list is returned. If the given name does not exist
+        in the nnet3 model, an exception is raised.
+
+        Parameters
+        ----------
+        name : str
+            Name of component to return weights for. Could also be
+            a regex pattern (e.g. "tdnn1.*"). If multiple components
+            match the pattern, all their weights are concatenated in
+            the list. The order is the same one they appear in the
+            model.
+
+        Returns
+        -------
+        Iterable[np.ndarray]
+            Weights returned as a list of numpy arrays.
+
+        Raises
+        ------
+        KeyError
+            If no components match the given name / pattern.
+        """
+        matchingComponents = self.getComponent(name)
+        if len(matchingComponents) == 0:
+            raise KeyError(f"no components with name matching '{name}'")
+
+        weights = []
+        for c in matchingComponents:
+            t = c["type"]
+            if t == "<NaturalGradientAffineComponent>":
+                weights.extend([c["params"], c["bias"]])
+            elif t == "<BatchNormComponent>":
+                weights.extend([c["target-rms"], c["stats-mean"], c["stats-var"]])
+            else:
+                # Other parsed components don't have weights.
+                continue
+
+        return weights
