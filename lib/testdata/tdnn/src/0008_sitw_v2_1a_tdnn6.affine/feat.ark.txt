@@ -1,0 +1,1 @@
+../../../mfcc_chunk_30_16khz.ark.txt
