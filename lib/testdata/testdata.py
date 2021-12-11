@@ -38,13 +38,20 @@ class KaldiTestDataReader:
             for line in f:
                 tokens = [ t for t in line.strip().split() if t != "" ]
 
-                # Start of a new entry in the ark.
+                # Vector ark
+                if "[" in tokens and "]" in tokens:
+                    if len(tokens) > 3:
+                        curID = tokens[0]
+                        ark[curID] = np.array([ tokens2vec(tokens[2:-1]) ], dtype=dtype)
+                    continue
+
+                # Start of a new matrix in the ark.
                 if "[" in tokens:
                     curID = tokens[0]
                     curMat = []
                     continue
 
-                # End of current entry.
+                # End of current matrix.
                 if "]" in tokens:
                     lastRow = True
                     if len(tokens) > 1:
