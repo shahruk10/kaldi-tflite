@@ -6,3 +6,5 @@ from .tdnn.tdnn import TDNN
 from .tdnn.utils import reshapeKaldiTdnnWeights
 
 from .normalization.batchnorm import BatchNorm
+
+from .stats.stats_pooling import StatsPooling
