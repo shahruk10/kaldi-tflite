@@ -275,7 +275,7 @@ class StatsPooling(Layer):
         var = tf.divide(x2sum, n) - tf.pow(mean, 2)
         std = tf.sqrt(tf.nn.relu(var) + self.epsilon)
 
-        return tf.concat([mean, std], axis=self.featAxis)
+        return tf.concat([mean, std], self.featAxis)
 
     def call(self, inputs):
 
