@@ -24,13 +24,13 @@ class TestStatsPoolingLayer(unittest.TestCase):
             "padding": "SAME",
             "reduce": False,
             "epsilon": 1e-10,
-            "reduce_timeaxis": False,
+            "reduce_time_axis": False,
             "name": "stats",
         }
 
     def test_StatsPoolingReduce(self):
         cfg = self.defaultLayerCfg()
-        cfg.update({"reduce_timeaxis": True})
+        cfg.update({"reduce_time_axis": True})
         stats = StatsPooling(**cfg)
 
         name = "stats_mean_std"
