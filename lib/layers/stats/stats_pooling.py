@@ -22,7 +22,7 @@ class StatsPooling(Layer):
                  include_std: bool = True,
                  padding: str = "SAME",
                  epsilon: float = 1e-10,
-                 reduce_timeaxis: bool = False,
+                 reduce_time_axis: bool = False,
                  name: str = None,
                  **kwargs):
         """
@@ -61,7 +61,7 @@ class StatsPooling(Layer):
             that fall within the stat window.
         epsilon : float, optional
             Small float added to variance to avoid dividing by zero, by default 1e-10
-        reduce_timeaxis : bool, optional
+        reduce_time_axis : bool, optional
             If true, will compute stats using all input timesteps and reduce the length of
             the time  axis to 1. This will make the layer ignore the output_period and 
             padding arguments, since it will reduce all the timesteps in the input to 1.
@@ -87,7 +87,7 @@ class StatsPooling(Layer):
         self.inputPeriod = input_period
         self.outputPeriod = output_period
         self.includeStd = include_std
-        self.reduce = reduce_timeaxis
+        self.reduce = reduce_time_axis
 
         if self.leftContext > 0 or self.rightContext < 0:
             raise ValueError("'left_context' must be <= 0 and 'right_context' must be >= 0")
