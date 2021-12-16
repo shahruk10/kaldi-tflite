@@ -4,6 +4,8 @@
 # behaviour in Kaldi. Primarily used in testing the DSP layers implemented
 # in tensorflow.
 
+from typing import Union, Tuple
+
 import numpy as np
 
 
@@ -78,3 +80,130 @@ def ExtractFrames(samples: np.ndarray,
     strides = x.strides + (x.strides[-1],)
 
     return np.lib.stride_tricks.as_strided(x, shape=shape, strides=strides)[::k]
+
+
+def GetWindowFunction(window_type: str, window_size: int) -> np.ndarray:
+    """
+    Computes the window function of the given type for the
+    given size.
+
+    Parameters
+    ----------
+    window_type : str
+        Type of window [ hamming | hanning | rectangular | blackmann | povey | sine ]
+    window_size : int
+        Size of the window as number of samples.
+
+    Returns
+    -------
+    np.ndarray
+        Window funciton of length window_size.
+
+    Raises
+    ------
+    ValueError
+        If window_size == 0.
+        If window_type is invalid.
+    """
+    if window_size == 0:
+        raise ValueError("window_size must be > 0")
+
+    if window_type == "hanning":
+        return np.hanning(window_size)
+
+    if window_type == "hamming":
+        return np.hamming(window_size)
+
+    if window_type == "rectangular":
+        return np.ones(window_size)
+
+    if window_type == "blackman":
+        return np.blackman(window_size)
+
+    M = window_size
+    n = np.arange(0, M)
+
+    if window_type == "povey":
+        return (0.5 - 0.5 * np.cos(2.0 * np.pi * n / (M - 1)))**0.85
+
+    if window_type == "sine":
+        return np.sin(np.pi * n / (M - 1))
+
+    raise ValueError(f"invalid window type {window_type}")
+
+
+def ProcessFrames(frames: np.ndarray,
+                  dither: float = 0.0,
+                  remove_dc_offset: bool = True,
+                  preemphasis_coefficient: float = 0.97,
+                  window_type: str = "povey",
+                  raw_energy: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Processes extracted frames by applying configured window functions and other
+    transformations such as pre-emphasis and removal of DC offset. Returns the
+    processed windows, and log energy of those windows.
+
+    Parameters
+    ----------
+    frames : np.ndarray
+        Numpy array containing frames, shape = (..., frames, samples)
+    dither : float, optional
+        Dithering constant, by default 0.0 (disabled)
+    remove_dc_offset : bool, optional
+        Subtract mean from waveform on each frame, by default True
+    preemphasis_coefficient : float, optional
+        Coefficient for use in signal preemphasis, by default 0.97
+    window_type : str, optional
+        Type of window [ hamming | hanning | povey | rectangular | sine | blackmann ],
+        by default "povey"
+    raw_energy : bool, optional
+        If true, compute energy before preemphasis and windowing, by default True
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+        Processed frames and log energy.
+
+    Raises
+    ------
+    ValueError
+        If preemphasis_coefficient not between 0 and 1.
+        if window_type is invalid.
+    """
+    if preemphasis_coefficient < 0 or preemphasis_coefficient > 1:
+        raise ValueError("preemphasis coefficient must be between 0 and 1")
+
+    # Getting window function adding axes so that it may be broadcasted when
+    # multiplying with the frames array.
+    windowSize = frames.shape[-1]
+    windowFunc = GetWindowFunction(window_type, windowSize)
+    rank = len(frames.shape)
+    windowFuncShape = [1] * (rank - 1) + [-1]
+    windowFunc = windowFunc.reshape(windowFuncShape)
+
+    # Small constant added to energies to prevent log(0).
+    eps = np.finfo(frames.dtype).eps
+
+    windows = frames.copy()
+
+    if dither != 0.0:
+        ditherAmount = np.random.normal(size=windows.shape) * dither
+        windows += ditherAmount.astype(windows.dtype)
+
+    if remove_dc_offset:
+        means = np.mean(windows, axis=-1, keepdims=True)
+        windows = windows - means
+
+    if raw_energy:
+        energy = np.sum(np.power(windows, 2), axis=-1, keepdims=True).clip(min=eps)
+
+    if preemphasis_coefficient > 0.0:
+        windows[..., 1:] -= preemphasis_coefficient * windows[..., :-1]
+        windows[..., 0] -= preemphasis_coefficient * windows[..., 0]
+
+    windows = windows * windowFunc
+
+    if not raw_energy:
+        energy = np.sum(np.power(windows, 2), axis=-1, keepdims=True).clip(min=eps)
+
+    return windows, np.log(energy)
