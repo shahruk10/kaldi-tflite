@@ -13,3 +13,4 @@ from .dsp.framing import Framing
 from .dsp.windowing import Windowing
 from .dsp.filterbank import FilterBank
 from .dsp.dct import DCT
+from .dsp.mfcc import MFCC
