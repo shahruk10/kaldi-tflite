@@ -27,6 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
+        sudo apt update -y && sudo apt install -y libsndfile1
         conda env update --file environment.yml --name base
 
     - name: Run linter
