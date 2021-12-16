@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # Functions in this script define some utility dsp functions that mimic the
-# behaviour in Kaldi. Primarily used in testing the DSP layers implemented
+# behavior in Kaldi. Primarily used in testing the DSP layers implemented
 # in tensorflow.
 
-from typing import Union, Tuple
+from typing import Tuple
 
 import numpy as np
 
 
-def MirrorPad(x: np.ndarray, pad: int) -> np.ndarray:
+def MirrorPad(x: np.ndarray, left_pad: int, right_pad: int) -> np.ndarray:
     """
     Pads the input array on either side of the last axis by the
     number of padding samples specified. Padding is done by mirroring
@@ -20,17 +20,57 @@ def MirrorPad(x: np.ndarray, pad: int) -> np.ndarray:
     ----------
     x : np.ndarray
         1D array containing samples.
-    pad : int
-        Number of samples to pad with on either side.
+    left_pad : int
+        Number of samples to mirror for padding on the left side.
+    right_pad : int
+        Number of samples to mirror for padding on the right side.
 
     Returns
     -------
     np.ndarray
         Padded array.
     """
-    leftPadding = np.flip(x[..., :pad + 1], axis=-1)  # [p, p-1, ..., 2, 1 , 0]
-    rightPadding = np.flip(x[..., -pad:], axis=-1)    # [N, N-1, ..., N-p-2, N-p-1 , N-p]
+    leftPadding = np.flip(x[..., :left_pad], axis=-1)  # [p-1, ..., 2, 1 , 0]
+    rightPadding = np.flip(x[..., -right_pad:], axis=-1)    # [N, N-1, ..., N-p-2, N-p-1 , N-p]
     return np.concatenate([leftPadding, x, rightPadding], axis=-1)
+
+
+def PadWaveform(x: np.ndarray, frameSize: int, frameShift: int) -> np.ndarray:
+    """
+    Pads given waveform x by mirroring samples at the boundaries,
+    such that frames of the given size and shift can be taken
+    containing the boundary values.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Waveform array.
+    frameSize : int
+        Frame size as number of samples.
+    frameShift : int
+        Frame shift as number of samples.
+
+    Returns
+    -------
+    np.ndarray
+        Padded waveform.
+    """
+    # TODO (shahruk): simplify this
+
+    # N = total number of samples.
+    N = x.shape[-1]
+
+    # M = number of frames; adding half the frameShift before dividing, to have
+    # the effect of rounding towards the closest integer. 
+    M = (N + (frameShift // 2)) // frameShift
+
+    Nv = (M - 1) * frameShift + frameSize
+    leftOver = abs(N - Nv)
+
+    leftPad = (frameSize - frameShift) // 2
+    rightPad = leftOver - leftPad
+
+    return MirrorPad(x, leftPad, rightPad)
 
 
 def ExtractFrames(samples: np.ndarray,
@@ -43,13 +83,13 @@ def ExtractFrames(samples: np.ndarray,
     assumed that for snipEdges=False, the input samples have already been
     padded if required using `MirrorPad()`.
 
-    # Adapted from `_get_strided()` function defined here:
-    # https://pytorch.org/audio/stable/_modules/torchaudio/compliance/kaldi.html
+    Adapted from `_get_strided()` function defined here:
+    https://pytorch.org/audio/stable/_modules/torchaudio/compliance/kaldi.html
 
     Parameters
     ----------
     samples : np.ndarray
-        1D array contanining samples to frame.
+        1D array containing samples to frame.
     frameSizeMs : float
         Frame length in milliseconds.
     frameShiftMs : float
@@ -97,7 +137,7 @@ def GetWindowFunction(window_type: str, window_size: int) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Window funciton of length window_size.
+        Window function of length window_size.
 
     Raises
     ------

@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 
-from lib.kaldi import MirrorPad, ExtractFrames
+from lib.kaldi import PadWaveform, ExtractFrames
 from lib.layers import Framing
 
 
@@ -33,23 +33,26 @@ class TestFramingLayer(unittest.TestCase):
 
         for cfg in configs:
             frameSizeMs, frameShiftMs, sampleFreq = cfg.values()
-            framer = Framing(frameSizeMs, frameShiftMs, sampleFreq, True)
 
             N = int(10 * sampleFreq)  # 10 seconds worth of samples
+            m = int(sampleFreq * frameSizeMs / 1000.0)   # Frame size as # of samples.
+            k = int(sampleFreq * frameShiftMs / 1000.0)  # Frame shift as # of samples.
+
             x = np.arange(0, N)
 
             with self.subTest(cfg=cfg, snip_edges=True):
+                framer = Framing(frameSizeMs, frameShiftMs, sampleFreq)
+
                 want = ExtractFrames(x, frameSizeMs, frameShiftMs, sampleFreq, True)
                 got = framer(x).numpy()
                 self.compareFrames(want, got)
 
             with self.subTest(cfg=cfg, snip_edges=False):
-                # Amount of padding on the left and right for input sample array.
-                pad = int((frameSizeMs - frameShiftMs) / 1000.0 * sampleFreq) // 2
-                x = MirrorPad(x, pad)
+                framer = Framing(frameSizeMs, frameShiftMs, sampleFreq)
 
-                want = ExtractFrames(x, frameSizeMs, frameShiftMs, sampleFreq, True)
-                got = framer(x).numpy()
+                xPadded = PadWaveform(x, m, k)
+                want = ExtractFrames(xPadded, frameSizeMs, frameShiftMs, sampleFreq, False)
+                got = framer(xPadded).numpy()
                 self.compareFrames(want, got)
 
 
