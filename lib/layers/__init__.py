@@ -10,3 +10,4 @@ from .normalization.batchnorm import BatchNorm
 from .stats.stats_pooling import StatsPooling
 
 from .dsp.framing import Framing
+from .dsp.windowing import Windowing
