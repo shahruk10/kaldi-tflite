@@ -8,3 +8,5 @@ from .tdnn.utils import reshapeKaldiTdnnWeights
 from .normalization.batchnorm import BatchNorm
 
 from .stats.stats_pooling import StatsPooling
+
+from .dsp.framing import Framing
