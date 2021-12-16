@@ -10,3 +10,4 @@ dependencies:
     - tqdm==4.62.3
     - pytest==6.2.5
     - pylint
+    - librosa==0.8.1
