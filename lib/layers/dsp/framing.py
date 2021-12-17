@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 from typing import Union, Iterable, Tuple
 
 import tensorflow as tf
@@ -52,6 +51,7 @@ class Framing(Layer):
                  frame_shift_ms: float = 10.0,
                  sample_frequency: float = 16000.0,
                  name: str = None,
+                 dynamic_input_shape: bool = False,
                  **kwargs):
         """
         Initializes Framing layer with the given configuration.
@@ -64,6 +64,12 @@ class Framing(Layer):
             Frame shift in milliseconds, by default 10.0
         sample_frequency : float, optional
             Sampling frequency in hertz, by default 16000.0
+        dynamic_input_shape : bool, optional
+            If true, the input to this layer can have different or unknown
+            shape. At inference time, the indexes along the last axis that
+            will be gathered into frames wll be recomputed each time. If this
+            is false, then the indexes are never recomputed, and the layer
+            will always expect the same input shape.
         name : str, optional
             Name of the given layer. If auto set if set to None.
             By default None.
@@ -78,6 +84,10 @@ class Framing(Layer):
         self.sampleFreq = sample_frequency
         self.frameSizeMs = frame_length_ms
         self.frameShiftMs = frame_shift_ms
+        self.dynamicInputShape = dynamic_input_shape
+
+        self.batchAxis = 0
+        self.sampleAxis = -1
 
         if self.frameSizeMs <= 0 or self.frameShiftMs <= 0 or self.sampleFreq <= 0:
             raise ValueError("frame_length, frame_shift and sample_frequency should be > 0")
@@ -103,9 +113,6 @@ class Framing(Layer):
         self.frameIndexes = None
         self.numInputSamples = None
 
-        # The last axis is considered to be the sample axis.
-        self.sampleAxis = -1
-
     def build(self, input_shape: Iterable[Union[int, None]]):
         """
         Precomputes the sample indexes which will be gathered into
@@ -120,9 +127,20 @@ class Framing(Layer):
         Raises
         ------
         ValueError
+            If input_shape is unknown and dynamic_input_shape = False.
             If length of sample axis < frame size.
         """
         numSamples = input_shape[self.sampleAxis]
+
+        if numSamples is None and not self.dynamicInputShape:
+            raise ValueError(
+                "input_shape must not be unknown if dynamic_input_shape set to False",
+            )
+
+        if numSamples is None:
+            # Will have to dynamically compute indexes are inference time.
+            return
+
         if numSamples < self.frameSize:
             raise ValueError(
                 f"input sample size (axis={self.sampleAxis}) must be "
@@ -147,12 +165,36 @@ class Framing(Layer):
         -------
         Tuple[Union[int, None]]
             Shape of the output of this layer.
+
+        Raises
+        ------
+        ValueError
+            If input_shape is unknown and dynamic_input_shape = False.
         """
         numSamples = input_shape[self.sampleAxis]
 
-        frameIndexes = self.computeFrameIndexes(numSamples)
-        numFrames, frameSize = tf.shape(frameIndexes)
-        outputShape = input_shape[:self.sampleAxis] + [numFrames, frameSize]
+        if numSamples is None and not self.dynamicInputShape:
+            raise ValueError(
+                "input_shape must not be unknown if dynamic_input_shape set to False",
+            )
+
+        if numSamples is None:
+            numFrames, frameSize = None, self.frameSize
+        else:
+            frameIndexes = self.computeFrameIndexes(numSamples)
+            numFrames, frameSize = tf.shape(frameIndexes)
+            assert self.frameSize == frameSize
+
+        sampleAxis = self.sampleAxis
+        if sampleAxis < 0:
+            sampleAxis += len(input_shape)
+
+        outputShape = []
+        for axis, dim in enumerate(input_shape):
+            if axis != sampleAxis:
+                outputShape.append(dim)
+            else:
+                outputShape.extend([numFrames, frameSize])
 
         return outputShape
 
@@ -162,6 +204,7 @@ class Framing(Layer):
             "frame_length": self.frameSizeMs,
             "frame_shift": self.frameShiftMs,
             "sample_frequency": self.sampleFreq,
+            "dynamic_input_shape": self.dynamicInputShape,
         })
 
         return config
@@ -199,7 +242,24 @@ class Framing(Layer):
 
     def call(self, inputs):
 
-        # Gathering frames; frames.shape = (batch, numFrames, frameSize)
-        frames = tf.gather(params=inputs, indices=self.frameIndexes, axis=self.sampleAxis)
+        # Gathering frames using precomputed indexes.
+        if not self.dynamicInputShape:
+            # frames.shape = (batch, numFrames, frameSize)
+            frames = tf.gather(params=inputs, indices=self.frameIndexes, axis=self.sampleAxis)
+            return frames
+
+        inputShape = tf.shape(inputs)
+        batchSize = inputShape[self.batchAxis]
+        numSamples = inputShape[self.sampleAxis]
+
+        # Recomputing indexes and gathering frames.
+        frameIndexes = self.computeFrameIndexes(numSamples)
+        frames = tf.gather(params=inputs, indices=frameIndexes, axis=self.sampleAxis)
+
+        # Reshaping so that the output shape of this layer contains the frame
+        # size for downstream layers. Reshaping just changes metadata of the
+        # tensor instead of actually reallocating anything, so this should be OK.
+        # TODO (shahruk): verify above / find better solution.
+        frames = tf.reshape(frames, (batchSize, -1, self.frameSize))
 
         return frames

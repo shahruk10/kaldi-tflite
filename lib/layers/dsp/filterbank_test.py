@@ -16,11 +16,11 @@
 # ==============================================================================
 
 
-
 import unittest
 import numpy as np
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
+import tensorflow as tf
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Sequential
 
@@ -59,6 +59,7 @@ class TestFilterBankLayer(unittest.TestCase):
                 "frame_length_ms": 25.0,
                 "frame_shift_ms": 10.0,
                 "sample_frequency": 16000.0,
+                "dynamic_input_shape": False,
             },
             "windowing": {
                 "window_type": "povey",
@@ -81,24 +82,77 @@ class TestFilterBankLayer(unittest.TestCase):
             }
         }
 
+    def checkTFLiteInference(
+        self, interpreter: tf.lite.Interpreter, x: np.ndarray,
+            wantFrames: int, wantDim: int, resize: bool,
+    ):
+        inputLayerIdx = interpreter.get_input_details()[0]['index']
+        outputLayerIdx = interpreter.get_output_details()[0]['index']
+
+        # Setting input size.
+        if resize:
+            interpreter.resize_tensor_input(inputLayerIdx, x.shape)
+
+        interpreter.allocate_tensors()
+        interpreter.set_tensor(inputLayerIdx, x)
+        interpreter.invoke()
+        y = interpreter.get_tensor(outputLayerIdx)
+
+        gotFrames = y.shape[1]
+        self.assertTrue(
+            gotFrames == wantFrames,
+            f"output number of frames ({gotFrames}) does not match expected ({wantFrames})",
+        )
+
+        gotDim = y.shape[-1]
+        self.assertTrue(
+            gotDim == wantDim,
+            f"output feature dimension ({gotDim}) does not match expected ({wantDim})",
+        )
+
     def test_ConvertTFLite(self):
 
-        cfg = self.defaultCfg()
-        input_size = 16000 * 3
+        tests = {
+            "fixed_input": {
+                "input_shape": 16000 * 3,
+                "inputs": [(16000 * 3, 298)],  # (numSamples, wantFrames)
+                "framing": {"dynamic_input_shape": False},
+            },
+            "dynamic_input": {
+                "input_shape": None,
+                "inputs": [(16000 * 1, 98), (16000 * 3, 298), (16000 * 2, 198)],
+                "framing": {"dynamic_input_shape": True},
+            },
+        }
 
-        # Creating Filter Bank extraction model.
-        mdl = Sequential([
-            Input((input_size, )),
-            Framing(**cfg["framing"]),
-            Windowing(**cfg["windowing"]),
-            FilterBank(**cfg["fbank"]),
-        ])
+        for name, overrides in tests.items():
+            with self.subTest(name=name, overrides=overrides):
+                cfg = self.defaultCfg()
+                cfg["framing"].update(overrides["framing"])
 
-        # Saving model and converting to TF Lite.
-        with TemporaryDirectory() as mdlPath, \
-                NamedTemporaryFile(suffix='.tflite') as tflitePath:
-            mdl.save(mdlPath)
-            SavedModel2TFLite(mdlPath, tflitePath.name)
+                # Creating Filter Bank extraction model.
+                mdl = Sequential([
+                    Input((overrides["input_shape"], )),
+                    Framing(**cfg["framing"]),
+                    Windowing(**cfg["windowing"]),
+                    FilterBank(**cfg["fbank"]),
+                ])
+
+                wantDim = cfg["fbank"]["num_bins"]
+                resize = cfg["framing"]["dynamic_input_shape"]
+
+                # Saving model and converting to TF Lite.
+                with TemporaryDirectory() as mdlPath, \
+                        NamedTemporaryFile(suffix='.tflite') as tflitePath:
+                    mdl.save(mdlPath)
+                    SavedModel2TFLite(mdlPath, tflitePath.name)
+
+                    # Testing if inference works.
+                    interpreter = tf.lite.Interpreter(model_path=tflitePath.name)
+                    for numSamples, wantFrames in overrides["inputs"]:
+                        with self.subTest(name=name, num_samples=numSamples):
+                            x = np.random.random((1, numSamples)).astype(np.float32)
+                            self.checkTFLiteInference(interpreter, x, wantFrames, wantDim, resize)
 
     def test_FilterBank(self):
 
