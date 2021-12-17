@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 from typing import Union, Iterable, Tuple
 
 import numpy as np
@@ -107,9 +106,9 @@ class MFCC(Layer):
         Raises
         ------
         ValueError
-            [description]
+            If num_mfccs > num_mels.
         """
-        super(MFCC, self).__init__(trainable=False, name=name, **kwargs)
+        super(MFCC, self).__init__(trainable=False, name=name)
 
         self.numMffcs = num_mfccs
         self.melBins = num_mels
@@ -179,7 +178,16 @@ class MFCC(Layer):
 
     def get_config(self) -> dict:
         config = super(MFCC, self).get_config()
+
+        config.update(self.windowing.get_config())
+        config.update(self.filterbank.get_config())
+
         config.update({
+            "num_mfccs": self.numMffcs,
+            "num_mels": self.melBins,
+            "cepstral_lifter": self.cepstralLifter,
+            "use_energy": self.useEnergy,
+            "epsilon": self.eps.numpy(),
         })
 
         return config
