@@ -93,7 +93,7 @@ for sample_freq in 16000; do
 
                             # Output directory where reference input and outputs will be written to.
                             id=$(printf "%03d" ${n})
-                            out_dir="${TOP}/lib/testdata/feats/src/${sample_freq}_${id}"
+                            out_dir="${TOP}/lib/testdata/feats/src/fbank_mfcc/${sample_freq}_${id}"
                             mkdir -p "${out_dir}"
 
                             write_feat_conf "${out_dir}" ${sample_freq} ${num_mels} ${snip_edges} ${frame_length} ${frame_shift} ${raw_energy} ${num_ceps}
