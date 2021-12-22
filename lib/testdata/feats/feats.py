@@ -29,19 +29,19 @@ class RefMFCC(KaldiTestDataReader):
 
     @classmethod
     def getInputs(cls, testName):
-        inputFile = os.path.join(cls.basePath, "src", testName, "audio.wav")
+        inputFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "audio.wav")
         samples, _ = librosa.load(inputFile, sr=None)
         samples = (samples * 32768).astype(np.int16).astype(np.float32)
         return samples.reshape(1, -1)
 
     @classmethod
     def getOutputs(cls, testName):
-        inputFile = os.path.join(cls.basePath, "src", testName, "mfcc.ark.txt")
+        inputFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "mfcc.ark.txt")
         return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
 
     @classmethod
     def getConfig(cls, testName):
-        cfgFile = os.path.join(cls.basePath, "src", testName, "mfcc.conf")
+        cfgFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "mfcc.conf")
 
         cfg = {"snip_edges": False, "framing": {}, "mfcc": {}}
         with open(cfgFile, 'r') as f:
@@ -81,19 +81,19 @@ class RefFbank(KaldiTestDataReader):
 
     @classmethod
     def getInputs(cls, testName):
-        inputFile = os.path.join(cls.basePath, "src", testName, "audio.wav")
+        inputFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "audio.wav")
         samples, _ = librosa.load(inputFile, sr=None)
         samples = (samples * 32768).astype(np.int16).astype(np.float32)
         return samples.reshape(1, -1)
 
     @classmethod
     def getOutputs(cls, testName):
-        inputFile = os.path.join(cls.basePath, "src", testName, "fbank.ark.txt")
+        inputFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "fbank.ark.txt")
         return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
 
     @classmethod
     def getConfig(cls, testName):
-        cfgFile = os.path.join(cls.basePath, "src", testName, "fbank.conf")
+        cfgFile = os.path.join(cls.basePath, "src", "fbank_mfcc", testName, "fbank.conf")
 
         cfg = {"snip_edges": False, "framing": {}, "windowing": {}, "fbank": {}}
         with open(cfgFile, 'r') as f:
