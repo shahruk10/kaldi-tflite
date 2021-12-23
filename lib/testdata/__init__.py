@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 from .testdata import KaldiTestDataReader
 
 from .plda.plda_model import RefPldaModel
@@ -30,4 +29,4 @@ from .tdnn.tdnn_models import RefKaldiXVectorModels
 
 from .stats.stats_pooling import RefStatsPooling
 
-from .feats.feats import RefMFCC, RefFbank
+from .feats.feats import RefMFCC, RefFbank, RefCMVN

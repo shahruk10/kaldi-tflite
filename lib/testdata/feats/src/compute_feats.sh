@@ -75,6 +75,34 @@ function generate_feats() {
         ark,t:"${out_dir}/mfcc.ark.txt"
 }
 
+function write_cmvn_conf() {
+    out_dir=$1
+    window=$2
+    norm_vars=$3
+    center=$4
+    min_window=$5
+
+    cat <<EOF > ${out_dir}/cmvn.conf
+        --cmn-window=${window}
+        --norm-vars=${norm_vars}
+        --center=${center}
+        --min-cmn-window=${min_window}
+EOF
+}
+
+function apply_cmvn() {
+    out_dir=$1
+    mfcc_dir=$2
+
+    ln -sf "$(realpath ${mfcc_dir}/mfcc.ark.txt --relative-to=${out_dir})" "${out_dir}/mfcc.ark.txt"
+
+    # Applying CMVN.
+    "${kaldi}/src/featbin/apply-cmvn-sliding" \
+        --config="${out_dir}/cmvn.conf" \
+        ark,t:"${out_dir}/mfcc.ark.txt" \
+        ark,t:"${out_dir}/cmvn.ark.txt"
+}
+
 for sample_freq in 16000; do
     n=0
     for num_mels in 23 30; do
@@ -101,6 +129,25 @@ for sample_freq in 16000; do
                         done
                     done
                 done
+            done
+        done
+    done
+done
+
+# Applying CMVN with various conifgs on a single set of MFCCs.
+mfcc_dir="${TOP}/lib/testdata/feats/src/fbank_mfcc/16000_001"
+n=0
+for center in true; do
+    for min_window in 100; do
+        for window in 199 200 201 600; do
+            for norm_vars in false true; do
+                n=$((n+1))
+                id=$(printf "%03d" ${n})
+                out_dir="${TOP}/lib/testdata/feats/src/cmvn/16000_001_${id}"
+                mkdir -p "${out_dir}"
+
+                write_cmvn_conf "${out_dir}" ${window} ${norm_vars} ${center} ${min_window}
+                apply_cmvn "${out_dir}" "${mfcc_dir}"
             done
         done
     done
