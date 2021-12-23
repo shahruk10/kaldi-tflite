@@ -17,4 +17,4 @@
 
 
 
-from .frame_extraction import MirrorPad, PadWaveform, ExtractFrames, ProcessFrames
+from .frame_extraction import MirrorPad, PadWaveform, ExtractFrames, ProcessFrames, ApplyCMVN

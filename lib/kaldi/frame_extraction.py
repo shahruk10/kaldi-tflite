@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 # Functions in this script define some utility dsp functions that mimic the
 # behavior in Kaldi. Primarily used in testing the DSP layers implemented
 # in tensorflow.
@@ -78,7 +77,7 @@ def PadWaveform(x: np.ndarray, frameSize: int, frameShift: int) -> np.ndarray:
     N = x.shape[-1]
 
     # M = number of frames; adding half the frameShift before dividing, to have
-    # the effect of rounding towards the closest integer. 
+    # the effect of rounding towards the closest integer.
     M = (N + (frameShift // 2)) // frameShift
 
     Nv = (M - 1) * frameShift + frameSize
@@ -264,3 +263,138 @@ def ProcessFrames(frames: np.ndarray,
         energy = np.sum(np.power(windows, 2), axis=-1, keepdims=True).clip(min=eps)
 
     return windows, np.log(energy)
+
+
+def getWindowedSums(frames: np.ndarray, N: int, padding: str = "same") -> np.ndarray:
+    """
+    Returns an array containing the sum of elements inside a window of size N, centered
+    at each frame in the input `frames` array. The `frames` array is expected to be left
+    padded with one zero-ed frame along the frame axis (-2) to facilliate taking the difference
+    of cumulative sums.
+
+    Parameters
+    ----------
+    frames : np.ndarray
+        Numpy array containing frames, shape = (..., frames, samples).
+    N : int
+        Size of the window over frames.
+    padding : str, optional
+        One of ["SAME", "VALID"]. If padding == "SAME", the output array will have the same
+        shape as `frames` except that it will have one less frame (padding frame discarded).
+        If padding == "VALID", only frames about which the centered window fits completely
+        within the `frames` array is evaluated. The output number of frames in this case will
+        be `numFrames - (2N-1) // 2 - 1` where `numFrames = frames.shape[-2]`. By default "SAME".
+
+
+    Returns
+    -------
+    np.ndarray
+        Numpy array containing sum of elements wtihin the window
+        centered at each frame of `frames`.
+    """
+    padding = padding.upper()
+    if padding not in ["SAME", "VALID"]:
+        raise ValueError(f"`padding` should be either 'SAME' or 'VALID', got '{padding}'")
+
+    # frames is expected to have been padded by one zero on the left o make the
+    # cumsum logic below work. The acutal number of frames is thus one less than
+    # given.
+    frameAxis = -2
+    framesUnpaddedShape = list(frames.shape)
+    numFrames = framesUnpaddedShape[frameAxis] - 1
+    framesUnpaddedShape[frameAxis] = numFrames
+
+    # Taking the difference between cs and cs shifted by the length of the
+    # window gives the sum of elements within each window.
+    cs = np.cumsum(frames, axis=frameAxis)
+    a = N // 2
+    b = numFrames - (N - 1) // 2
+
+    # Repeat sum at edges.
+    if padding == "SAME":
+        sumWindows = np.zeros(framesUnpaddedShape, dtype=frames.dtype)
+        sumWindows[..., a:b, :] = cs[..., N:, :] - cs[..., :-N, :]
+        sumWindows[..., :a, :] = sumWindows[..., a:a + 1, :]
+        sumWindows[..., b:, :] = sumWindows[..., b - 1:b, :]
+    else:
+        sumWindows = cs[..., N:, :] - cs[..., :-N, :]
+
+    return sumWindows
+
+
+def ApplyCMVN(frames: np.ndarray,
+              center: bool = False,
+              norm_vars: bool = False,
+              window: int = 600,
+              min_window: int = 100,
+              padding: str = "SAME") -> np.ndarray:
+    """
+    Apply sliding-window cepstral mean (and optionally variance)
+    normalization on given frames.
+
+    Parameters
+    ----------
+    frames : np.ndarray
+        Numpy array containing frames, shape = (..., frames, samples).
+    center : bool, optional
+        If true, use a window centered on the current frame (to the extent possible,
+        modulo end effects). If false, window is to the left. By default False
+    norm_vars : bool, optional
+        If true, normalize to 1.0, by default False.
+    window : int, optional
+        Number of frames in window for running average CMN computation, by default 600.
+    min_window : int, optional
+        Minimum CMN window used at start of decoding (adds latency only at start). Only
+        applicable if center == false, ignored if center==true. By default 100.
+    padding : str, optional
+        One of ["SAME", "VALID"]. If padding == "SAME", the output array will have the same
+        shape as `frames` except that it will have one less frame (padding frame discarded).
+        If padding == "VALID", only frames about which the centered window fits completely
+        within the `frames` array is evaluated. The output number of frames in this case will
+        be `numFrames - (2N-1) // 2` where `numFrames = frames.shape[-2]` and `N = window size`.
+        By default "SAME".
+
+    Returns
+    -------
+    np.ndarray
+        Frames with CMVN applied.
+    """
+    if not center:
+        raise NotImplementedError("ApplyCMVN with center=False not supported yet")
+
+    padding = padding.upper()
+    if padding not in ["SAME", "VALID"]:
+        raise ValueError(f"`padding` should be either 'SAME' or 'VALID', got '{padding}'")
+
+    frameAxis = -2
+    numFrames, frameSize = frames.shape[-2:]
+    rank = len(frames.shape)
+    std = 1
+    N = window
+
+    if numFrames <= N:
+        mean = np.mean(frames, axis=frameAxis, keepdims=True)
+        if norm_vars:
+            std = np.std(frames, axis=frameAxis, keepdims=True)
+    else:
+        # First padding frames on the left by 1
+        # frame to offset all frames by 1 ...
+        offsetPad = [[0, 0] for i in range(rank)]
+        offsetPad[frameAxis] = [1, 0]
+        paddedFrames = np.pad(frames, offsetPad, mode='constant')
+
+        # ... and  aking the difference between cs and cs shifted by the length
+        # of the window gives the sum of elements within each window
+        sumWindows = getWindowedSums(paddedFrames, N, padding=padding)
+        mean = np.divide(sumWindows, N)
+
+        if norm_vars:
+            sum2Windows = getWindowedSums(np.power(paddedFrames, 2), N, padding=padding)
+            std = np.sqrt(np.divide(sum2Windows, N) - np.power(mean, 2))
+
+    if numFrames > N and padding == "VALID":
+        a = N // 2
+        b = numFrames - (N - 1) // 2
+        return np.divide(frames[..., a:b, :] - mean, std)
+
+    return np.divide(frames - mean, std)
