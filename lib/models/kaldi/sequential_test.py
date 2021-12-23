@@ -24,13 +24,13 @@ import yaml
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from lib.models import SavedModel2TFLite
-from lib.models.kaldi import SequentialModel, downloadModel
+from lib.models.kaldi import SequentialFromConfig, downloadModel
 from lib.testdata import RefKaldiXVectorModels
 
 tolerance = 1.25e-3
 
 
-class TestKaldiSequentialModel(unittest.TestCase):
+class TestKaldiSequentialFromConfig(unittest.TestCase):
 
     def calcErr(self, want, got):
         """
@@ -59,7 +59,7 @@ class TestKaldiSequentialModel(unittest.TestCase):
                     cfg = yaml.safe_load(f)
 
                 # Creating model.
-                mdl = SequentialModel(cfg["model_config"])
+                mdl = SequentialFromConfig(cfg["model_config"])
 
                 # Saving model and converting to TF Lite.
                 with TemporaryDirectory() as mdlPath, \
@@ -103,7 +103,7 @@ class TestKaldiSequentialModel(unittest.TestCase):
                         weights = None
 
                 # Creating model.
-                mdl = SequentialModel(cfg["model_config"], weights)
+                mdl = SequentialFromConfig(cfg["model_config"], weights)
 
                 if weights is None:
                     self.skipTest("model weights not found")

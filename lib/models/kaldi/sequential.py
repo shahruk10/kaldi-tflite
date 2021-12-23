@@ -83,7 +83,7 @@ def cfg2layers(layerCfg: dict) -> Iterable[Layer]:
     return layers
 
 
-def SequentialModel(cfg: dict, nnet3Path: str = None) -> Sequential:
+def SequentialFromConfig(cfg: dict, nnet3Path: str = None) -> Sequential:
     """
     Creates a tensorflow.keras.Sequential model using the given configuration.
 

@@ -24,7 +24,7 @@
   - [`StatsPooling`](./lib/layers/stats/stats_pooling.py)
   - [`PLDA`](./lib/layers/plda/plda.py)
 
-- `TDNN` and `BatchNorm` Layers can be easily initialized from existing Kaldi nnet3 model files. See [`lib/model/sequential.py`](./lib/model/sequential.py) and [`data/configs`](./data/configs) for examples of how Kaldi's pret-rained x-vector models can be converted to Tensorflow Lite models.
+- `TDNN` and `BatchNorm` Layers can be easily initialized from existing Kaldi nnet3 model files. See [`SequentialFromConfig`](./lib/model/kaldi/sequential.py) and [`data/kaldi_model/configs`](./data/kaldi_model/configs) for examples of how Kaldi's pret-rained x-vector models can be converted to Tensorflow Lite models.
 
 ## Related Projects
 
