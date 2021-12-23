@@ -26,7 +26,7 @@ from tensorflow.keras.models import Sequential
 
 from lib.models import SavedModel2TFLite
 from lib.layers import Framing, MFCC
-from lib.kaldi import PadWaveform
+from lib.kaldi_numpy import PadWaveform
 from lib.testdata import RefMFCC
 
 tolerance = 2.25e-4

@@ -21,7 +21,7 @@ import unittest
 import numpy as np
 
 from lib.layers import Windowing
-from lib.kaldi import ProcessFrames
+from lib.kaldi_numpy import ProcessFrames
 
 np.random.seed(12345)
 

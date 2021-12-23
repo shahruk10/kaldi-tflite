@@ -20,7 +20,7 @@
 import unittest
 import numpy as np
 
-from lib.kaldi import PadWaveform, ExtractFrames
+from lib.kaldi_numpy import PadWaveform, ExtractFrames
 from lib.layers import Framing
 
 
