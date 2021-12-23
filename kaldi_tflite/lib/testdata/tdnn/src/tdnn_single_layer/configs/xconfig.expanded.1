@@ -1,0 +1,9 @@
+# This file was created by the command:
+# /home/shahruk/git/kaldi/egs/wsj/s5/steps/nnet3/xconfig_to_configs.py --xconfig-file /media/shahruk/terra2x/cobalt2/exp/20211128-plda-in-tensorflow/kaldi-xvector-diarization-tflite/kaldi_tflite/lib/testdata/tdnn/src/tdnn_single_layer/configs/network.xconfig --config-dir /media/shahruk/terra2x/cobalt2/exp/20211128-plda-in-tensorflow/kaldi-xvector-diarization-tflite/kaldi_tflite/lib/testdata/tdnn/src/tdnn_single_layer/configs/
+#It contains the same content as ./xconfig but it was parsed and
+#default config values were set.
+# See also ./xconfig.expanded.2
+
+input name=input dim=30
+relu-layer name=tdnn1 add-log-stddev=False bias-stddev= bottleneck-dim=-1 dim=32 dropout-per-dim=False dropout-per-dim-continuous=False dropout-proportion=0.5 input=Append(-3, -1, 0, 1) l2-regularize= learning-rate-factor= max-change=0.75 ng-affine-options= ng-linear-options= self-repair-scale=1e-05 target-rms=1.0
+output name=output dim=32 input=[-1] objective-type=linear output-delay=0
