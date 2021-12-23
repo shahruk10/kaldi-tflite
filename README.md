@@ -19,6 +19,7 @@
   - [`FilterBank`](./lib/layers/dsp/filterbank.py)
   - [`DCT`](./lib/layers/dsp/dct.py)
   - [`MFCC`](./lib/layers/dsp/mfcc.py)
+  - [`CMVN`](./lib/layers/normalization/cmvn.py)
   - [`TDNN`](./lib/layers/tdnn/tdnn.py)
   - [`StatsPooling`](./lib/layers/stats/stats_pooling.py)
   - [`PLDA`](./lib/layers/plda/plda.py)
