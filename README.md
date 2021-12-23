@@ -14,26 +14,27 @@
 ```sh
 # Doing this in a virtual environment is recommended. 
 git clone https://github.com/shahruk10/kaldi-tflite
-cd kaldi-tfilite && pip install -e .
+cd kaldi-tflite && pip install -e .
 ```
 
 ## Implemented Layers
 
-- Layer implementations can be found under [`lib/layers`](./lib/layers). The implementations are kaldi compatible, i.e. they produce the same output (within numerical rounding tolerances) as the Kaldi counterparts.
+- Layer implementations can be found under [`kaldi_tflite/lib/layers`](./kaldi_tflite/lib/layers). The implementations are kaldi compatible, i.e. they produce the same output (within numerical rounding tolerances) as the Kaldi counterparts.
 
 - List of implemented layers (**all compatible with TF Lite**) include:
 
-  - [`Framing`](./lib/layers/dsp/framing.py)
-  - [`Windowing`](./lib/layers/dsp/windowing.py)
-  - [`FilterBank`](./lib/layers/dsp/filterbank.py)
-  - [`DCT`](./lib/layers/dsp/dct.py)
-  - [`MFCC`](./lib/layers/dsp/mfcc.py)
-  - [`CMVN`](./lib/layers/normalization/cmvn.py)
-  - [`TDNN`](./lib/layers/tdnn/tdnn.py)
-  - [`StatsPooling`](./lib/layers/stats/stats_pooling.py)
-  - [`PLDA`](./lib/layers/plda/plda.py)
+  - [`Framing`](./kaldi_tflite/lib/layers/dsp/framing.py)
+  - [`Windowing`](./kaldi_tflite/lib/layers/dsp/windowing.py)
+  - [`FilterBank`](./kaldi_tflite/lib/layers/dsp/filterbank.py)
+  - [`DCT`](./kaldi_tflite/lib/layers/dsp/dct.py)
+  - [`MFCC`](./kaldi_tflite/lib/layers/dsp/mfcc.py)
+  - [`CMVN`](./kaldi_tflite/lib/layers/normalization/cmvn.py)
+  - [`TDNN`](./kaldi_tflite/lib/layers/tdnn/tdnn.py)
+  - [`StatsPooling`](./kaldi_tflite/lib/layers/stats/stats_pooling.py)
+  - [`PLDA`](./kaldi_tflite/lib/layers/plda/plda.py)
 
-- `TDNN` and `BatchNorm` Layers can be easily initialized from existing Kaldi nnet3 model files. See [`SequentialFromConfig`](./lib/model/kaldi/sequential.py) and [`data/kaldi_model/configs`](./data/kaldi_model/configs) for examples of how Kaldi's pret-rained x-vector models can be converted to Tensorflow Lite models.
+- `TDNN` and `BatchNorm` Layers can be easily initialized from existing Kaldi nnet3 model files.
+See [`SequentialFromConfig`](./kaldi_tflite/lib/models/kaldi/sequential.py) and [`data/kaldi_models/configs`](./data/kaldi_models/configs) for examples of how Kaldi's pret-rained x-vector models can be converted to Tensorflow Lite models.
 
 
 ## Usage
