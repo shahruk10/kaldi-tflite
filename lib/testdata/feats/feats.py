@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 import os
 import numpy as np
 import librosa
@@ -123,6 +122,43 @@ class RefFbank(KaldiTestDataReader):
                     cfg["fbank"]["use_power"] = True if val == "true" else False
                 elif key == "--snip-edges":
                     cfg["snip_edges"] = True if val == "true" else False
+                else:
+                    raise ValueError(f"unrecognized config '{line}' in test conf {cfgFile}")
+
+        return cfg
+
+
+class RefCMVN(KaldiTestDataReader):
+    basePath = os.path.dirname(__file__)
+
+    @classmethod
+    def getInputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", "cmvn", testName, "mfcc.ark.txt")
+        return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
+
+    @classmethod
+    def getOutputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", "cmvn", testName, "cmvn.ark.txt")
+        return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
+
+    @classmethod
+    def getConfig(cls, testName):
+        cfgFile = os.path.join(cls.basePath, "src", "cmvn", testName, "cmvn.conf")
+
+        cfg = {"cmvn": {"window": 600, "center": True, "norm_vars": False, "min_window": 100}}
+        with open(cfgFile, 'r') as f:
+            for line in f:
+                line = line.strip()
+                key, val = line.split("=")
+
+                if key == "--cmn-window":
+                    cfg["cmvn"]["window"] = int(val)
+                elif key == "--center":
+                    cfg["cmvn"]["center"] = True if val == "true" else False
+                elif key == "--norm-vars":
+                    cfg["cmvn"]["norm_vars"] = True if val == "true" else False
+                elif key == "--min-cmn-window":
+                    cfg["cmvn"]["min_window"] = int(val)
                 else:
                     raise ValueError(f"unrecognized config '{line}' in test conf {cfgFile}")
 
