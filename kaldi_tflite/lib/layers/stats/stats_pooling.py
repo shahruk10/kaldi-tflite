@@ -97,7 +97,7 @@ class StatsPooling(Layer):
 
             If 'padding' is not set to either "SAME" or "VALID".
         """
-        super(StatsPooling, self).__init__(trainable=True, name=name)
+        super(StatsPooling, self).__init__(trainable=False, name=name)
 
         self.leftContext = left_context
         self.rightContext = right_context
