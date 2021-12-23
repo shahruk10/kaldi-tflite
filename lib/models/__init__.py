@@ -18,3 +18,4 @@
 
 
 from .convert_tflite import SavedModel2TFLite
+from .kaldi import SequentialFromConfig
