@@ -83,7 +83,7 @@ def cfg2layers(layerCfg: dict) -> Iterable[Layer]:
     return layers
 
 
-def SequentialFromConfig(cfg: dict, nnet3Path: str = None) -> Sequential:
+def SequentialFromConfig(cfg: dict, nnet3Path: str = None, name: str = None) -> Sequential:
     """
     Creates a tensorflow.keras.Sequential model using the given configuration.
 
@@ -100,6 +100,9 @@ def SequentialFromConfig(cfg: dict, nnet3Path: str = None) -> Sequential:
     nnet3Path : str, optional
         If path to nnet3 raw file provided, the created tensorflow model
         will be initialized using weights from nnet3 model. By default None.
+
+    name : str, optional
+        Name to give to sequential model, by default None.
 
     Raises
     ------
@@ -125,7 +128,7 @@ def SequentialFromConfig(cfg: dict, nnet3Path: str = None) -> Sequential:
     for lCfg in cfg["layers"][1:]:
         layers.extend(cfg2layers(lCfg))
 
-    mdl = Sequential(layers)
+    mdl = Sequential(layers, name=name)
 
     # Initializing weights if path to nnet3 model given.
     if nnet3Path is not None:

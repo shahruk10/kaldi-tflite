@@ -170,14 +170,8 @@ class PLDA(Layer):
         return transformed
 
     def logLikelihood(self, inputs, mean, var):
-        # Taking the sum of logs of var by computing products of all elements
-        # and then taking the log at the end. This is how Kaldi does it, but
-        # tensorflow might optimize this way anyway even if done the normal way.
-        #
-        # TODO: Verify no rounding errors here; kaldi does this by checking if
-        # the prod exceeds 10e+10 or goes below 10e-10 and updates a sum
-        # variable and resets the prod to 1.0
-        logDet = tf.math.log(tf.math.reduce_prod(var))  # shape = ()
+        # Taking the sum of logs of var
+        logDet = tf.math.reduce_sum(tf.math.log(var))  # shape = ()
 
         # Computing the square difference between all pairs of mean and input.
         # Here, the mean (which has been transposed above) is broadcasted along

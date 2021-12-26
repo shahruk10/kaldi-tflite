@@ -16,11 +16,14 @@
 # ==============================================================================
 
 
-
 import unittest
 import numpy as np
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from kaldi_tflite.lib.layers import Windowing
+from kaldi_tflite.lib.models import SavedModel2TFLite
 from kaldi_tflite.lib.kaldi_numpy import ProcessFrames
 
 np.random.seed(12345)
@@ -62,6 +65,30 @@ class TestWindowingLayer(unittest.TestCase):
             "epsilon": np.finfo(np.float32).eps,
         }
 
+    def checkConvertTFLite(self, layer: Windowing):
+
+        # TODO (shahruk): With `dithering` enabled, the conversion fails because
+        # the tf.RandomStandardNormal op isn't natively supported in Tensorflow
+        # Lite (requires Flex Ops). Need to find a workaround that does not
+        # involve needing to link to Flex lib for inference. Pre-computing
+        # random dither values and storing it in the model could be one
+        # solution.
+        if layer.dither > 0:
+            print("TF Lite conversion not supported with dithering enabled, skipping check")
+            return
+
+        i = Input((None, 256))
+        mdl = Model(
+            inputs=i,
+            outputs=layer(i),
+        )
+
+        # Saving model and converting to TF Lite.
+        with TemporaryDirectory() as mdlPath, \
+                NamedTemporaryFile(suffix='.tflite') as tflitePath:
+            mdl.save(mdlPath)
+            SavedModel2TFLite(mdlPath, tflitePath.name)
+
     def test_Windowing(self):
 
         # Default config overrides
@@ -101,6 +128,7 @@ class TestWindowingLayer(unittest.TestCase):
 
                 self.compareFrames(wantWindows, gotWindows.numpy(), "processed windows", 2 * cfg["dither"])
                 self.compareFrames(wantEnergy, gotEnergy.numpy(), "window energies", 2 * cfg["dither"])
+                self.checkConvertTFLite(windowing)
 
             # Testing layer when return_energy is set to False. The processed
             # windows should be the same the as in the test above.
@@ -111,6 +139,7 @@ class TestWindowingLayer(unittest.TestCase):
                 gotWindows = windowing(frames)
 
                 self.compareFrames(wantWindows, gotWindows.numpy(), "processed windows", 2 * cfg["dither"])
+                self.checkConvertTFLite(windowing)
 
 
 if __name__ == "__main__":
