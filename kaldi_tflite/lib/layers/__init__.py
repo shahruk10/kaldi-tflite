@@ -32,3 +32,4 @@ from .dsp.windowing import Windowing
 from .dsp.filterbank import FilterBank
 from .dsp.dct import DCT
 from .dsp.mfcc import MFCC
+from .dsp.vad import VAD
