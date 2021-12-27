@@ -163,3 +163,48 @@ class RefCMVN(KaldiTestDataReader):
                     raise ValueError(f"unrecognized config '{line}' in test conf {cfgFile}")
 
         return cfg
+
+
+class RefVAD(KaldiTestDataReader):
+    basePath = os.path.dirname(__file__)
+
+    @classmethod
+    def getInputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", "vad", testName, "mfcc.ark.txt")
+        return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
+
+    @classmethod
+    def getOutputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", "vad", testName, "vad.ark.txt")
+        return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0).transpose([0, 2, 1])
+
+    @classmethod
+    def getConfig(cls, testName):
+        cfgFile = os.path.join(cls.basePath, "src", "vad", testName, "vad.conf")
+
+        cfg = {"vad": {
+            "energy_mean_scale": 0.5,
+            "energy_threshold": 5.0,
+            "frames_context": 0,
+            "proportion_threshold": 0.6,
+            "return_indexes": False,
+            "energy_coeff": 0,
+        }}
+
+        with open(cfgFile, 'r') as f:
+            for line in f:
+                line = line.strip()
+                key, val = line.split("=")
+
+                if key == "--vad-energy-threshold":
+                    cfg["vad"]["energy_threshold"] = float(val)
+                elif key == "--vad-energy-mean-scale":
+                    cfg["vad"]["energy_mean_scale"] = float(val)
+                elif key == "--vad-frames-context":
+                    cfg["vad"]["frames_context"] = int(val)
+                elif key == "--vad-proportion-threshold":
+                    cfg["vad"]["proportion_threshold"] = float(val)
+                else:
+                    raise ValueError(f"unrecognized config '{line}' in test conf {cfgFile}")
+
+        return cfg

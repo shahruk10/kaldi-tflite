@@ -103,6 +103,34 @@ function apply_cmvn() {
         ark,t:"${out_dir}/cmvn.ark.txt"
 }
 
+function write_vad_conf() {
+    out_dir=$1
+    energy_threshold=$2
+    mean_scale=$3
+    frames_context=$4
+    proportion_threshold=$5
+
+    cat <<EOF > ${out_dir}/vad.conf
+        --vad-energy-threshold=$2
+        --vad-energy-mean-scale=$3
+        --vad-frames-context=$4
+        --vad-proportion-threshold=$5
+EOF
+}
+
+function compute_vad() {
+    out_dir=$1
+    mfcc_dir=$2
+
+    ln -sf "$(realpath ${mfcc_dir}/mfcc.ark.txt --relative-to=${out_dir})" "${out_dir}/mfcc.ark.txt"
+
+    # Computing VAD.
+    "${kaldi}/src/ivectorbin/compute-vad" \
+        --config="${out_dir}/vad.conf" \
+        ark,t:"${out_dir}/mfcc.ark.txt" \
+        ark,t:"${out_dir}/vad.ark.txt"
+}
+
 for sample_freq in 16000; do
     n=0
     for num_mels in 23 30; do
@@ -148,6 +176,25 @@ for center in true; do
 
                 write_cmvn_conf "${out_dir}" ${window} ${norm_vars} ${center} ${min_window}
                 apply_cmvn "${out_dir}" "${mfcc_dir}"
+            done
+        done
+    done
+done
+
+# Computing VAD with various conifgs on a single set of MFCCs.
+mfcc_dir="${TOP}/kaldi_tflite/lib/testdata/feats/src/fbank_mfcc/16000_001"
+n=0
+for energy_threshold in 5.0 10.0; do
+    for mean_scale in 0.0 0.5 1.0; do
+        for frames_context in 0 1 2; do
+            for proportion_threshold in 0.1 0.6 0.9; do
+                n=$((n+1))
+                id=$(printf "%03d" ${n})
+                out_dir="${TOP}/kaldi_tflite/lib/testdata/feats/src/vad/16000_001_${id}"
+                mkdir -p "${out_dir}"
+
+                write_vad_conf "${out_dir}" ${energy_threshold} ${mean_scale} ${frames_context} ${proportion_threshold}
+                compute_vad "${out_dir}" "${mfcc_dir}"
             done
         done
     done
