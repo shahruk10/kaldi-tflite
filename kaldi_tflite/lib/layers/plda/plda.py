@@ -16,13 +16,27 @@
 # ==============================================================================
 
 
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 
 
 class PLDA(Layer):
+
+    """
+    This layer implements Probabilistic Linear Discriminant Analysis: see
+    "Probabilistic Linear Discriminant Analysis" by Sergey Ioffe, ECCV 2006.
+    This layer can be initialized with a PLDA model trained using Kaldi for
+    transforming and scoring i-vectors / x-vectors.
+
+    The layer expects a either a 2D tensor of shape (batch, vec_dim) or a 3D
+    tensor of shape (batch, 1, vec_dim) where the vectors to be transformed and
+    scored are stacked along the batch axis. The vec_dim must be the same as the
+    expected input dimension of this layer (`dim` argument).
+
+    The layer outputs a 2D tensor of shape (batch, batch) containing the
+    pairwise scores between the possible pairs of vectors in the input. 
+    """
 
     def __init__(self,
                  dim: int,
@@ -35,10 +49,7 @@ class PLDA(Layer):
                  return_transformed: bool = True,
                  name: str = None):
         """
-        This layer implements Probabilistic Linear Discriminant Analysis: see
-        "Probabilistic Linear Discriminant Analysis" by Sergey Ioffe, ECCV 2006.
-        This layer can be initialized with a PLDA matrix trained using Kaldi and
-        i-vectors / x-vectors can be transformed using this layer.
+        Initializes PLDA layer with given configuration.
 
         Parameters
         ----------
@@ -85,6 +96,10 @@ class PLDA(Layer):
         self.paramDtype = dtype
         self.returnTransformed = return_transformed
 
+        # This gets updated during `build()`. By default we expect input tensors
+        # to be (batch, 1, dim).
+        self.inputRank = 3
+
         # Converting parameters into tensors.
         self.mean = tf.constant(plda_mean, dtype=self.paramDtype)
         self.transformMat = tf.constant(plda_transform, dtype=self.paramDtype)
@@ -106,6 +121,17 @@ class PLDA(Layer):
 
         # Natural Log of 2 * pi. Used in computing log likelihood.
         self.log2pi = tf.constant(1.8378770664093454835606594728112, dtype=self.paramDtype)
+
+    def build(self, input_shape: tuple):
+        super(PLDA, self).build(input_shape)
+
+        vecDim = input_shape[-1]
+        if vecDim != self.dim:
+            raise ValueError(f"expected input vector dimension to be {self.dim}, got {vecDim}")
+
+        self.inputRank = len(input_shape)
+        if self.inputRank not in [2, 3]:
+            raise ValueError(f"expected input tensor rank to be 2 or 3, got {len(input_shape)}")
 
     def assertParamShapes(self):
         meanDims = len(self.mean.shape)
@@ -218,8 +244,15 @@ class PLDA(Layer):
 
         return loglikeRatio
 
-    @tf.function
     def call(self, inputs):
+
+        if self.inputRank == 2:
+            inputs = tf.expand_dims(inputs, -1)
+        elif self.inputRank == 3:
+            inputs = tf.transpose(inputs, [0, 2, 1])
+        else:
+            raise ValueError(f"expected input tensor rank to be 2 or 3, got {self.inputRank}")
+
         inputs = tf.cast(inputs, self.paramDtype)
         transformed = self.transformVector(inputs)
         scores = self.logLikelihoodRatio(transformed)
