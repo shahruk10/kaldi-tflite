@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 from typing import Union, Iterable
 import numpy as np
 
@@ -75,6 +74,28 @@ class KaldiObjReader():
 
         buf = self.data[self.curPos:self.curPos + nBytes]
         self.curPos += len(buf)
+
+        return buf
+
+    def peekBytes(self, nBytes: int) -> bytes:
+        """
+        Tries to peek at the specified number of bytes from the loaded data,
+        starting from the current position. The read pointer is *not* incremented.
+
+        Parameters
+        ----------
+        nBytes : int
+            Number of bytes to peek. 
+
+        Returns
+        -------
+        bytes
+            List of bytes peeked.
+        """
+        if self.curPos >= len(self.data):
+            return []
+
+        buf = self.data[self.curPos:self.curPos + nBytes]
 
         return buf
 
