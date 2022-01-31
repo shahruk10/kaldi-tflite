@@ -174,7 +174,7 @@ class StatsPooling(Layer):
                 false_fn=lambda: end,
             )
 
-        return start, end
+        return start, end+1
 
     def getIndicesToEval(self, inputTimesteps: Union[int, tf.Tensor]) -> tf.Tensor:
 
@@ -198,7 +198,7 @@ class StatsPooling(Layer):
 
         # We will mask any indices outside the bounds when computing statistics.
         # mask has shape = (numEval, windowWidth). Adding dimensions along the
-        # batch and feature axis to facililate multiplying with 'gathered'
+        # batch and feature axis to facilitate multiplying with 'gathered'
         # inputs. Final shape of mask = (1, numEval, windowWidth, 1).
         mask = tf.logical_and(tf.greater_equal(indices, 0), tf.less(indices, inputTimesteps))
         mask = tf.expand_dims(tf.expand_dims(mask, -1), 0)

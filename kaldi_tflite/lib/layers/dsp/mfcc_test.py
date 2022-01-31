@@ -152,7 +152,7 @@ class TestMFCCLayer(unittest.TestCase):
                             x = np.random.random((1, numSamples)).astype(np.float32)
                             self.checkTFLiteInference(interpreter, x, wantFrames, wantDim, resize)
 
-    def test_CMVN(self):
+    def test_MFCC(self):
 
         # Default config overrides
         testNames = [f"16000_{i:03d}" for i in range(1, 49)]
