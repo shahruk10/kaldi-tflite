@@ -67,16 +67,6 @@ class TestWindowingLayer(unittest.TestCase):
 
     def checkConvertTFLite(self, layer: Windowing):
 
-        # TODO (shahruk): With `dithering` enabled, the conversion fails because
-        # the tf.RandomStandardNormal op isn't natively supported in Tensorflow
-        # Lite (requires Flex Ops). Need to find a workaround that does not
-        # involve needing to link to Flex lib for inference. Pre-computing
-        # random dither values and storing it in the model could be one
-        # solution.
-        if layer.dither > 0:
-            print("TF Lite conversion not supported with dithering enabled, skipping check")
-            return
-
         i = Input((None, 256))
         mdl = Model(
             inputs=i,
@@ -103,7 +93,7 @@ class TestWindowingLayer(unittest.TestCase):
             {"preemphasis_coefficient": 0.0},
             {"preemphasis_coefficient": 0.90},
             {"raw_energy": False},
-            {"dither": 0.1},
+            {"dither": 1.0},
         ]
 
         frames = np.random.random((1, 1000, 256))

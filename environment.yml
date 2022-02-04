@@ -5,7 +5,7 @@ dependencies:
   - python=3.7.11
   - pip=21.2.2
   - pip:
-    - tensorflow==2.6.2
+    - tensorflow==2.8.0
     - pyyaml==6.0
     - tqdm==4.62.3
     - pytest==6.2.5
