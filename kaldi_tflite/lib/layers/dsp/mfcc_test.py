@@ -122,12 +122,25 @@ class TestMFCCLayer(unittest.TestCase):
                 "inputs": [(16000 * 1, 98), (16000 * 3, 298), (16000 * 2, 198)],
                 "framing": {"dynamic_input_shape": True},
             },
+            "with_dithering_fixed_input": {
+                "input_shape": 16000 * 3,
+                "inputs": [(16000 * 3, 298)],  # (numSamples, wantFrames)
+                "framing": {"dynamic_input_shape": False},
+                "mfcc": {"dither": 1.0},
+            },
+            "with_dithering_dynamic_input": {
+                "input_shape": None,
+                "inputs": [(16000 * 1, 98), (16000 * 3, 298), (16000 * 2, 198)],
+                "framing": {"dynamic_input_shape": True},
+                "mfcc": {"dither": 1.0},
+            },
         }
 
         for name, overrides in tests.items():
             with self.subTest(name=name, overrides=overrides):
                 cfg = self.defaultCfg()
-                cfg["framing"].update(overrides["framing"])
+                cfg["framing"].update(overrides.get("framing", {}))
+                cfg["mfcc"].update(overrides.get("mfcc", {}))
 
                 # Creating Filter Bank extraction model.
                 mdl = Sequential([

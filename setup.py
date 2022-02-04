@@ -45,7 +45,7 @@ setup(
         'librosa==0.8.1',
     ],
     install_requires=[
-        'tensorflow==2.6.2',
+        'tensorflow==2.8.0',
         'pyyaml==6.0',
         'tqdm==4.62.3',
     ],
