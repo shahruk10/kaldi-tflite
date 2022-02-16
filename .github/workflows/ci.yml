@@ -36,4 +36,4 @@ jobs:
 
     - name: Run tests
       run: |
-        PYTHONPATH=$GITHUB_WORKSPACE pytest -v
+        PYTHONPATH=$GITHUB_WORKSPACE pytest --cov=kaldi_tflite -v

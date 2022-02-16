@@ -4,3 +4,7 @@ __pycache__/
 .pytest_cache/
 *.egg-info
 .eggs
+.coverage
+tmp
+data/kaldi_models/*
+!data/kaldi_models/configs
