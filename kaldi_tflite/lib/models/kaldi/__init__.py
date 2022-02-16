@@ -18,4 +18,5 @@
 
 
 from .sequential import SequentialFromConfig
+from .xvector_extractor import XvectorExtractor, XvectorExtractorFromConfig
 from .download import downloadModel
