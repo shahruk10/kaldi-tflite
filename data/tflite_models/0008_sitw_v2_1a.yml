@@ -1,0 +1,71 @@
+
+name: "0008_sitw_v2_1a"
+description: "Pre-trained x-vector model trained on augmented VoxCeleb 1 and VoxCeleb 2."
+
+# Using configs for 0008_sitw_v2_1a x-vector model.
+#
+# mfcc.conf:
+# --sample-frequency=16000
+# --frame-length=25
+# --low-freq=20
+# --high-freq=7600
+# --num-mel-bins=30
+# --num-ceps=30
+# --snip-edges=false
+#
+# cmvn.conf:
+# --norm-vars=false
+# --center=true
+# --cmn-window=300
+#
+# vad.conf:
+# --vad-energy-threshold=5.5
+# --vad-energy-mean-scale=0.5
+# --vad-proportion-threshold=0.12
+# --vad-frames-context=2
+
+# Config for x-vector extractor comprising framing, windowing, MFCC extraction,
+# VAD, CMVN and the TDNN model that computes the x-vector.
+extractor:
+
+  framing:
+    frame_length_ms: 25
+    frame_shift_ms: 10
+    sample_frequency: 16000
+    dynamic_input_shape: true
+
+  mfcc:
+    num_mfccs: 30
+    num_mels: 30
+    sample_frequency: 16000.0
+    high_freq_cutoff: 7600.0
+    low_freq_cutoff: 20.0
+    dither: 1.0
+
+  vad:
+    energy_mean_scale: 0.5
+    energy_threshold: 5.5
+    frames_context: 2
+    proportion_threshold: 0.12
+    return_indexes: true
+    energy_coeff: 0
+
+  cmvn:
+    center: true
+    norm_vars: false
+    window: 300
+
+  xvec:
+    model_config_path: data/kaldi_models/configs/0008_sitw_v2_1a.yml
+    model_path: data/kaldi_models/0008_sitw_v2_1a/exp/xvector_nnet_1a/final.raw
+    global_mean_path: data/kaldi_models/0008_sitw_v2_1a/exp/xvector_nnet_1a/xvectors_train_combined_200k/mean.vec
+    lda_matrix_path: data/kaldi_models/0008_sitw_v2_1a/exp/xvector_nnet_1a/xvectors_train_combined_200k/transform.mat
+
+# Config for x-vector scoring using the PLDA model.
+scorer:
+  plda:
+    model_path: data/kaldi_models/kaldi/0008_sitw_v2_1a/exp/xvector_nnet_1a/xvectors_train_combined_200k/plda
+    dim: 128
+    normalize_length: true
+    simple_length_norm: false
+    return_transformed: false

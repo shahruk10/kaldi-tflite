@@ -16,6 +16,24 @@
 # ==============================================================================
 
 
+import os
+import numpy as np
+import librosa
 
-from .convert_tflite import SavedModel2TFLite
-from .kaldi import SequentialFromConfig, XvectorExtractor, XvectorExtractorFromConfig
+from kaldi_tflite.lib.testdata import KaldiTestDataReader
+
+
+class RefXVectorsE2E(KaldiTestDataReader):
+    basePath = os.path.dirname(__file__)
+
+    @classmethod
+    def getInputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", testName, "audio.wav")
+        samples, _ = librosa.load(inputFile, sr=None)
+        samples = (samples * 32767.0).astype(np.int16).astype(np.float32)
+        return samples.reshape(1, -1)
+
+    @classmethod
+    def getOutputs(cls, testName):
+        inputFile = os.path.join(cls.basePath, "src", testName, "xvector.ark.txt")
+        return np.stack(list(cls.loadKaldiArk(inputFile).values()), axis=0)
