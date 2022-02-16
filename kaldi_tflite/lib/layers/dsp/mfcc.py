@@ -110,18 +110,20 @@ class MFCC(Layer):
         """
         super(MFCC, self).__init__(trainable=False, name=name)
 
-        self.numMffcs = num_mfccs
+        self.numMfccs = num_mfccs
         self.melBins = num_mels
         self.cepstralLifter = cepstral_lifter
         self.useEnergy = use_energy
 
-        if self.numMffcs > self.melBins:
+        if self.numMfccs > self.melBins:
             raise ValueError("num_mfccs must be <= num_mels")
 
         self.eps = tf.constant(epsilon, dtype=self.dtype)
 
         # Inputs to this layers are expected to be in the shape
         # (batch, frames, samples)
+        self.batchAxis = 0
+        self.frameAxis = -2
         self.sampleAxis = -1
 
         # Instantiating DSP layers.
@@ -145,7 +147,7 @@ class MFCC(Layer):
         """
         Precomputes the liftering coefficients.
         """
-        M = self.numMffcs
+        M = self.numMfccs
         if M <= 1:
             return
 
@@ -172,7 +174,7 @@ class MFCC(Layer):
             Shape of the output of this layer.
         """
         outputShape = input_shape
-        outputShape[self.sampleAxis] = self.numMffcs
+        outputShape[self.sampleAxis] = self.numMfccs
 
         return outputShape
 
@@ -183,7 +185,7 @@ class MFCC(Layer):
         config.update(self.filterbank.get_config())
 
         config.update({
-            "num_mfccs": self.numMffcs,
+            "num_mfccs": self.numMfccs,
             "num_mels": self.melBins,
             "cepstral_lifter": self.cepstralLifter,
             "use_energy": self.useEnergy,
@@ -193,6 +195,10 @@ class MFCC(Layer):
         return config
 
     def call(self, inputs):
+
+        inputShape = tf.shape(inputs)
+        batchSize = inputShape[self.batchAxis]
+        numFrames = inputShape[self.frameAxis]
 
         if self.useEnergy:
             frames, energy = self.windowing(inputs)
@@ -213,7 +219,7 @@ class MFCC(Layer):
             orgShape = tf.shape(mfcc)
             mfcc = tf.reshape(mfcc, [-1, 1])
             energy = tf.reshape(energy, [-1, 1])
-            zeroIdx = tf.expand_dims(tf.range(0, tf.size(mfcc), self.numMffcs), 1)
+            zeroIdx = tf.expand_dims(tf.range(0, tf.size(mfcc), self.numMfccs), 1)
 
             # Current shapes (N = numFrames, B = batch, M = numMfccs):
             #   mfcc = (N*B*M, 1).
@@ -221,7 +227,18 @@ class MFCC(Layer):
             #   zeroIdx = (N, 1)
             mfcc = tf.tensor_scatter_nd_update(mfcc, zeroIdx, energy)
 
-            # Reshaping back to orginal shape (B, N, M).
-            mfcc = tf.reshape(mfcc, orgShape)
+        # Reshaping to expected shape (batch size, num frames, num mfccs). This
+        # is done for two reasons:
+        #
+        #  1. It returns the tensor to the original shape before it was
+        #    flattened to insert the frame energy at index 0 in the `if` block
+        #    above.
+        #
+        #  2. A stop-gap solution to a problem encountered in tensorflow v2.8.0
+        #    during conversion to TFLite, where the feature dimension size is
+        #    somehow lost. Any layers following the MFCC layer can't compute the
+        #    input / output shapes and the converter complains. See the issue:
+        #    https://github.com/shahruk10/kaldi-tflite/issues/13
+        mfcc = tf.reshape(mfcc, [batchSize, numFrames, self.numMfccs])
 
         return mfcc

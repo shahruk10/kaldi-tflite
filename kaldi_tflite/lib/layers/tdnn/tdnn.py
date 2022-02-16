@@ -16,7 +16,6 @@
 # ==============================================================================
 
 
-
 from typing import Tuple, Iterable
 
 import numpy as np
@@ -48,7 +47,7 @@ class TDNN(Layer):
                  subsampling_factor: int = 1,
                  padding: str = "SAME",
                  use_bias: bool = True,
-                 kernel_intializer: Initializer = GlorotUniform(),
+                 kernel_initializer: Initializer = GlorotUniform(),
                  bias_initializer: Initializer = GlorotUniform(),
                  activation: str = None,
                  name: str = None,
@@ -96,7 +95,7 @@ class TDNN(Layer):
 
         self.padding = padding.upper()
         if self.padding not in ["VALID", "SAME"]:
-            raise ValueError("padding should be eiter 'VALID' or 'SAME'")
+            raise ValueError("padding should be either 'VALID' or 'SAME'")
 
         if context is None:
             self.context = [0]
@@ -111,7 +110,7 @@ class TDNN(Layer):
         self.contextOffset = tf.constant([context], dtype=tf.int32)
 
         self.kernelWidth = len(context)
-        self.kernelInitializer = kernel_intializer
+        self.kernelInitializer = kernel_initializer
         self.biasInitializer = bias_initializer
 
         self.activation = activation
@@ -191,7 +190,7 @@ class TDNN(Layer):
             configured to not use bias vector, only kernel weights are expected
             in the list.
         fmt : str, optional
-            The format in whichh the weights of the kernel are arranged in -
+            The format in which the weights of the kernel are arranged in -
             either "kaldi" or "tensorflow", by default "kaldi".
 
         Raises

@@ -95,8 +95,10 @@ class CMVN(Layer):
             raise ValueError(f"`padding` should be either 'SAME' or 'VALID', got '{padding}'")
 
         # Inputs to this layers are expected to be in the shape
-        # (batch, frames, samples)
+        # (batch, frames, feats)
+        self.batchAxis = 0
         self.frameAxis = -2
+        self.featAxis = -1
 
     def compute_output_shape(self, input_shape: Iterable[Union[int, None]]) -> Tuple[Union[int, None]]:
         """
@@ -146,7 +148,7 @@ class CMVN(Layer):
         Returns a tensor containing the sum of elements inside a window of size
         self.N, centered at each frame in the input `frames` array. The `frames`
         array is expected to be left padded with one zero-ed frame along the
-        frame axis (-2) to facilliate taking the difference of cumulative sums.
+        frame axis (-2) to facililate taking the difference of cumulative sums.
 
         If padding == "SAME", the output array will have the same shape as
         `frames` except that it will have one less frame (padding frame
@@ -163,7 +165,7 @@ class CMVN(Layer):
         Returns
         -------
         tf.Tensor
-            Tensor containing sum of elements wtihin the window centered at each frame of `frames`.
+            Tensor containing sum of elements within the window centered at each frame of `frames`.
         """
         # Taking the difference between cs and cs shifted by the length of the
         # window gives the sum of elements within each window.
@@ -183,7 +185,10 @@ class CMVN(Layer):
 
     def call(self, inputs):
 
-        numFrames = tf.shape(inputs)[self.frameAxis]
+        inputShape = tf.shape(inputs)
+        batchSize = inputShape[self.batchAxis]
+        numFrames = inputShape[self.frameAxis]
+        featDim = inputShape[self.featAxis]
 
         # Branch to use when numFrames > window size. Will compute a mean
         # and std for each window.
@@ -232,6 +237,14 @@ class CMVN(Layer):
             inputs = inputs[..., a:b, :]
 
         if self.normVar:
-            return tf.divide(inputs - mean, std)
+            x = tf.divide(inputs - mean, std)
         else:
-            return inputs - mean
+            x = inputs - mean
+
+        # Reshaping to expected shape (batch size, num frames, num feats). This
+        # is done to be stop-gap solution to a problem encountered in tensorflow
+        # v2.8.0 during conversion to TFLite, where the feature dimension size
+        # is somehow lost. Any layers following the MFCC layer can't compute the
+        # input / output shapes and the converter complains. See the issue:
+        # https://github.com/shahruk10/kaldi-tflite/issues/13
+        return tf.reshape(x, [batchSize, -1, featDim])
