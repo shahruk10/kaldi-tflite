@@ -8,7 +8,6 @@
 
 - This project still a **work in progress**. I hope to add more examples and expand the feature set soon.
 
-
 ## Installation
 
 ```sh
@@ -28,6 +27,7 @@ cd kaldi-tflite && pip install -e .
   - [`FilterBank`](./kaldi_tflite/lib/layers/dsp/filterbank.py)
   - [`DCT`](./kaldi_tflite/lib/layers/dsp/dct.py)
   - [`MFCC`](./kaldi_tflite/lib/layers/dsp/mfcc.py)
+  - [`VAD`](./kaldi_tflite/lib/layers/dsp/vad.py)
   - [`CMVN`](./kaldi_tflite/lib/layers/normalization/cmvn.py)
   - [`TDNN`](./kaldi_tflite/lib/layers/tdnn/tdnn.py)
   - [`StatsPooling`](./kaldi_tflite/lib/layers/stats/stats_pooling.py)
@@ -36,13 +36,53 @@ cd kaldi-tflite && pip install -e .
 - `TDNN` and `BatchNorm` Layers can be easily initialized from existing Kaldi nnet3 model files.
 See [`SequentialFromConfig`](./kaldi_tflite/lib/models/kaldi/sequential.py) and [`data/kaldi_models/configs`](./data/kaldi_models/configs) for examples of how Kaldi's pret-rained x-vector models can be converted to Tensorflow Lite models.
 
-
 ## Usage
 
 - TODO: organize and expand this.
 
+### Quickstart
+
+- To build and initialize an x-vector extractor model using pre-trained weights:
+
+```py
+#!/usr/bin/env python3
+
+import librosa
+import numpy as np
+
+import tensorflow as tf
+import kaldi_tflite as ktf
+
+# Config file specifying feature extracting configs, nnet3 model config and weight paths. 
+cfgPath = "data/tflite_models/0008_sitw_v2_1a.yml"
+
+# Building and initializing model; Input = raw audio samples (between +/-32767).
+# Output = x-vector with LDA and length normalization applied.
+mdl = ktf.models.XvectorExtractorFromConfig(cfgPath, name="wav2xvec")
+print(mdl.summary())
+
+
+# Loading a test audio file; librosa converts samples to be within +/- 1.0; but
+# Kaldi and this library expects +/- 32767.0 (i.e. int16 max).
+inputFile = "kaldi_tflite/lib/testdata/librispeech_2.wav"
+samples, _ = librosa.load(inputFile, sr=None)
+samples = np.float32(samples * 32767.0)
+
+# Adding a batch axis.
+samples = samples.reshape(1, -1)
+
+# Extract x-vectors.
+xvec = mdl(samples)
+print(xvec)
+```
+
+- The sections below show a more detailed step-by-step process of building models in different
+ways using the layers and functionality implemented in this repo.
+
 ### Creating a feature extraction model
 
+- We can use the traditional ways of defining a tensorflow / keras model that extract features from provided raw audio samples using the layers defined in the module. The example uses the `Sequential` model structure from keras, but we can easily use `Functional` or `sub-classed` models for more flexibility.
+  
 ```py
 #!/usr/bin/env python3
 
@@ -56,6 +96,47 @@ mfcc = tf.keras.models.Sequential([
     ktf.layers.MFCC(num_mfccs=30, num_mels=30),
     ktf.layers.CMVN(center=True, window=200, norm_vars=False),
 ], name="wav2mfcc")
+
+print(mfcc.summary())
+```
+
+- To filter silent frames, we can use the [`VAD`](./kaldi_tflite/lib/layers/dsp/vad.py) layer in a functional model.
+
+- **WARNING**: Using the default layer config, the `VAD` can be used with a batch size of 1 only, since the number of 'active' frames in different entries in a batch won't necessarily be the same. The workaround for this is setting `return_indexes=False` in the layer config, which will cause it to output a *binary mask* instead (active frames = 1, silent frames = 0), which can be used as necessary.
+
+```py
+#!/usr/bin/env python3
+
+import tensorflow as tf
+import kaldi_tflite as ktf
+
+# Defining MFCC feature extractor + VAD + CMVN. Input = raw audio samples (between +/-32767).
+
+# Input layer.
+i = tf.keras.layers.Input((None,))
+
+# DSP layers.
+framingLayer = ktf.layers.Framing(dynamic_input_shape=True)
+mfccLayer = ktf.layers.MFCC(num_mfccs=30, num_mels=30)
+cmvnLayer = ktf.layers.CMVN(center=True, window=200, norm_vars=False)
+vadLayer = ktf.layers.VAD()
+
+# Creating frames and computing MFCCs.
+x = framingLayer(i)
+x = mfccLayer(x)
+
+# Computing VAD, which returns indexes of 'active' frames by default. But it can be made to
+# output a mask instead as well. See layer configs.
+activeFrames = vadLayer(x)
+x = tf.gather_nd(x, activeFrames)
+
+# The `tf.gather_nd` above removes the batch dimension, so we add one back.
+x = tf.expand_dims(x, 0)
+
+# Computing CMVN
+x = cmvnLayer(x)
+
+mfcc = tf.keras.Model(inputs=i, outputs=x, name="wav2mfcc")
 
 print(mfcc.summary())
 ```
@@ -88,6 +169,8 @@ print(xvec.summary())
 
 ### Initializing model weights from a Kaldi nnet3 model file
 
+- Models created using this library can be initialized using weights from Kaldi nnet3 model files. For the TDNN model in the example [above](#creating-a-tdnn-model), you can download it from the [Kaldi website](https://kaldi-asr.org/models/m8) (SITW Xvector System 1a). Then we can load the nnet3 file and initialize our tensorflow model.
+
 ```py
 # Loading model weights from kaldi nnet3 file. For x-vector models,
 # only TDNN and BatchNorm layers need to be initialized. We match
@@ -117,6 +200,11 @@ mdl = tf.keras.models.Sequential([
 print(mdl.summary())
 ```
 
+- For applications involving long audio streams, it is recommended to keep the feature extraction
+and neural networks separate as models to facililate processing chunks of frames at a time. The two
+tensorflow lite models can be made to work together with some glue code to pad and stream frames to
+each as required.
+
 ### Saving and Converting to a Tensorflow Lite model
 
 - To convert the model to a tensorflow lite model, we first need to save the model
@@ -124,11 +212,19 @@ to disk as a `SavedModel`. Then we can use the `SavedModel2TFlite` method to con
 and optimize the model for Tensorflow Lite.
 
 ```py
-savedMdl = "path/to/saved-model-directory"
-tfliteMdl = "path/to/tflite-model-file"
+# Set the paths where the models will be saved.
+savedMdl = "./my-model"
+tfliteMdl = "./my-model.tflite"
+
+# If you want to optimize the model for embedded devices, set this to True. This will
+# cause the tensorflow lite model to be optimized for size and latency, as well as
+# utilize use ARM's Neon extensions for math computations. (This may cause the model
+# to actually run *slower* on x86 systems that don't use Neon).
+optimize=False
+targetDtypes = [ tf.float32 ]
 
 mdl.save(savedMdl)
-ktf.models.SavedModel2TFLite(savedMdl, tfliteMdl, optimize=True)
+ktf.models.SavedModel2TFLite(savedMdl, tfliteMdl, optimize=optimize, target_dtypes=targetDtypes)
 ```
 
 ## Related Projects
