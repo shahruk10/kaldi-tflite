@@ -34,13 +34,12 @@ class VAD(Layer):
 
     The layer can be configured to return either;
 
-      - Binary masks containing 1s and 0s corresponding to frames with voice
-        activity and those without respectively (return_indexes=False). This is
-        the default.
-
-      - Frame indexes corresponding to frames with voice acitivty which can be
+      - Frame indexes corresponding to frames with voice activity which can be
         used with `tf.gather_nd` to gather the active frames into a single
-        tensor (return_indexes=False).
+        tensor (return_indexes=True). This is the default.
+    
+      - Binary masks containing 1s and 0s corresponding to frames with voice
+        activity and those without respectively (return_indexes=False).
     """
 
     def __init__(self,
@@ -48,7 +47,7 @@ class VAD(Layer):
                  energy_threshold: float = 5,
                  frames_context: int = 0,
                  proportion_threshold: float = 0.6,
-                 return_indexes=False,
+                 return_indexes=True,
                  energy_coeff: int = 0,
                  name: str = None,
                  **kwargs):
@@ -74,7 +73,7 @@ class VAD(Layer):
             If true, the output of this layer will be a tensor containing indexes of
             active frames for each frame sequence in the batch. Otherwise, the layer
             outputs binary masks containing 1s and 0s corresponding to active and
-            inactive frames respectively.
+            inactive frames respectively. By default, True.
         energy_coeff : int, optional
             The coefficient in each frame that should be used as the value on which
             the threshold will be applied. By default 0 (the first coefficient).
