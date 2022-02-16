@@ -16,6 +16,7 @@
 # ==============================================================================
 
 
+from typing import Iterable
 
 import os
 from pprint import pformat
@@ -24,8 +25,11 @@ import tensorflow as tf
 
 
 def SavedModel2TFLite(
-    savedModelPath: str, outPath: str,
-    optimize: bool = True, enable_select_tf_ops: bool = False,
+    savedModelPath: str,
+    outPath: str,
+    optimize: bool = False,
+    target_dtypes: Iterable[tf.dtypes.DType] = [tf.float16, tf.float32],
+    enable_select_tf_ops: bool = False,
 ):
     """
     Converts a SavedModel into a TFLite model saved as a FlatBuffer
@@ -41,7 +45,12 @@ def SavedModel2TFLite(
         (.tflite extension included if not provided)
     optimize : bool, optional
         Applies latency and model size optimizations, such as
-        dynamic quantization of model weights, by default True
+        dynamic quantization of model weights, by default False.
+    target_dtypes : Iterable[tf.dtypes.DType], optional
+        Applicable if optimize = True. Will optimize assuming that
+        the target devices will run on these data types. Optimization
+        might be driven by the smallest type in this set. By default,
+        set to [tf.float16, tf.float32].
     enable_select_tf_ops: bool, optional
         If true, will allow ops from the core tensorflow library which will
         require linking to the flex ops library when building applications
@@ -69,7 +78,9 @@ def SavedModel2TFLite(
         print(f"*Not* doing any optimizations for model size and inference latency")
         converter.optimizations = []
 
+    converter.target_spec.supported_types = target_dtypes
     converter.experimental_new_converter = True
+
     tfliteModel = converter.convert()
 
     # Save the model
