@@ -42,6 +42,7 @@ setup(
     ],
     tests_require=[
         'pytest==6.2.5',
+        'pytest-cov==3.0.0',
         'librosa==0.8.1',
     ],
     install_requires=[
