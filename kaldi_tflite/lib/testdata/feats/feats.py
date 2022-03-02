@@ -55,6 +55,8 @@ class RefMFCC(KaldiTestDataReader):
                     cfg["framing"]["frame_length_ms"] = float(val)
                 elif key == "--frame-shift":
                     cfg["framing"]["frame_shift_ms"] = float(val)
+                elif key == "--use-energy":
+                    cfg["mfcc"]["use_energy"] = True if val == "true" else False
                 elif key == "--raw-energy":
                     cfg["mfcc"]["raw_energy"] = True if val == "true" else False
                 elif key == "--dither":
