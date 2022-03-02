@@ -168,7 +168,7 @@ class TestMFCCLayer(unittest.TestCase):
     def test_MFCC(self):
 
         # Default config overrides
-        testNames = [f"16000_{i:03d}" for i in range(1, 49)]
+        testNames = [f"16000_{i:03d}" for i in range(1, 55)]
 
         for name in testNames:
 

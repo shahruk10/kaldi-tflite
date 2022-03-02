@@ -26,11 +26,13 @@ function write_feat_conf() {
     frame_shift=$6
     raw_energy=$7
     num_ceps=$8
+    use_energy=$9
 
     cat <<EOF > ${out_dir}/mfcc.conf
         --sample-frequency=${sample_freq}
         --frame-length=${frame_length}
         --frame-shift=${frame_shift}
+        --use-energy=${use_energy}
         --raw-energy=${raw_energy}
         --dither=0
         --low-freq=20
@@ -131,8 +133,10 @@ function compute_vad() {
         ark,t:"${out_dir}/vad.ark.txt"
 }
 
+use_energy=true
+n=0
+
 for sample_freq in 16000; do
-    n=0
     for num_mels in 23 30; do
         for snip_edges in true false; do
             for frame_length in 25 32; do
@@ -152,12 +156,40 @@ for sample_freq in 16000; do
                             out_dir="${TOP}/kaldi_tflite/lib/testdata/feats/src/fbank_mfcc/${sample_freq}_${id}"
                             mkdir -p "${out_dir}"
 
-                            write_feat_conf "${out_dir}" ${sample_freq} ${num_mels} ${snip_edges} ${frame_length} ${frame_shift} ${raw_energy} ${num_ceps}
+                            write_feat_conf "${out_dir}" ${sample_freq} ${num_mels} ${snip_edges} ${frame_length} ${frame_shift} ${raw_energy} ${num_ceps} ${use_energy}
                             generate_feats "${out_dir}" "${audio_path}" "${input_scp}"
                         done
                     done
                 done
             done
+        done
+    done
+done
+
+# A couple more unique combinations.
+use_energy=false
+sample_freq=16000
+snip_edges=true
+frame_length=25
+frame_shift=10
+
+for raw_energy in true false; do
+    for num_mels in 23 30; do
+        for num_ceps in 23 30; do
+            if [[ ${num_ceps} -gt ${num_mels} ]]; then
+                continue
+            fi
+            n=$((n+1))
+            audio_path="${TOP}/kaldi_tflite/lib/testdata/librispeech_2_trimmed.wav"
+            input_scp="seg1 ${audio_path}"
+
+            # Output directory where reference input and outputs will be written to.
+            id=$(printf "%03d" ${n})
+            out_dir="${TOP}/kaldi_tflite/lib/testdata/feats/src/fbank_mfcc/${sample_freq}_${id}"
+            mkdir -p "${out_dir}"
+
+            write_feat_conf "${out_dir}" ${sample_freq} ${num_mels} ${snip_edges} ${frame_length} ${frame_shift} ${raw_energy} ${num_ceps} ${use_energy}
+            generate_feats "${out_dir}" "${audio_path}" "${input_scp}"
         done
     done
 done
