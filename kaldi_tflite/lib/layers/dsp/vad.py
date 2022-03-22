@@ -78,7 +78,7 @@ class VAD(Layer):
             The coefficient in each frame that should be used as the value on which
             the threshold will be applied. By default 0 (the first coefficient).
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Is auto set if set to None.
             By default None.
 
         Raises

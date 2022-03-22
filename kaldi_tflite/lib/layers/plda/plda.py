@@ -85,7 +85,7 @@ class PLDA(Layer):
             If true, will return the inputs transformed by the PLDA transform
             matrix along with the PLDA scores. 
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Is auto set if set to None.
             By default None.
         """
         super().__init__(trainable=False, name=name)
