@@ -100,7 +100,7 @@ class MFCC(Layer):
         epsilon : float, optional
             Small constant added to energies to prevent taking log of 0, by default 1e-7
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Is auto set if set to None.
             By default None.
 
         Raises

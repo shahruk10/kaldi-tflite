@@ -71,7 +71,7 @@ class Framing(Layer):
             is false, then the indexes are never recomputed, and the layer
             will always expect the same input shape.
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Is auto set if set to None.
             By default None.
 
         Raises

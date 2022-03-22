@@ -66,7 +66,7 @@ class CMVN(Layer):
             be `numFrames - (2N-1) // 2` where `numFrames = input_shape[-2]` and `N = window size`.
             By default "SAME".
         name : str, optional
-            Name of the given layer. If auto set if set to None.
+            Name of the given layer. Is auto set if set to None.
             By default None.
 
         Raises
