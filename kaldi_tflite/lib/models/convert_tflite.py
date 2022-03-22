@@ -30,6 +30,7 @@ def SavedModel2TFLite(
     optimize: bool = False,
     target_dtypes: Iterable[tf.dtypes.DType] = [tf.float16, tf.float32],
     enable_select_tf_ops: bool = False,
+    enable_resource_variables: bool = False,
 ):
     """
     Converts a SavedModel into a TFLite model saved as a FlatBuffer
@@ -55,6 +56,8 @@ def SavedModel2TFLite(
         If true, will allow ops from the core tensorflow library which will
         require linking to the flex ops library when building applications
         with the TF Lite API.
+    enable_resource_variables: bool, optional
+        If true, enables resource variables to be converted by the converter.
     """
 
     print(f"TFLiteConverter: using tensorflow v{tf.__version__}")
@@ -80,6 +83,7 @@ def SavedModel2TFLite(
 
     converter.target_spec.supported_types = target_dtypes
     converter.experimental_new_converter = True
+    converter.experimental_enable_resource_variables = enable_resource_variables
 
     tfliteModel = converter.convert()
 
