@@ -14,23 +14,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
-
-from .testdata import KaldiTestDataReader
-
-from .plda.plda_model import RefPldaModel
-from .plda.plda_scores import RefPldaScores
-
-from .xvectors.xvectors import RefXVectors
-
-from .tdnn.tdnn_narrow import RefTdnnNarrow
-from .tdnn.tdnn_single_layer import RefTdnnSingleLayer
-from .tdnn.tdnn_models import RefKaldiXVectorModels
-
-from .ivector_extractor.ivector_extractor import RefIvectorExtractor
-
-from .stats.stats_pooling import RefStatsPooling
-
-from .feats.feats import RefMFCC, RefFbank, RefCMVN, RefVAD
-
-from .models.xvectors_e2e import RefXVectorsE2E
