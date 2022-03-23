@@ -430,3 +430,54 @@ class KaldiObjReader():
         mat = np.frombuffer(buf, dtype=matType).reshape(rows, cols)
 
         return mat
+
+    def readPackedMat(self) -> np.ndarray:
+        """
+        Reads a packed symmetric 2D array (matrix) of values from the current
+        position in the data stream. The data type of the elements is determined
+        from the data stream by the first byte at the start of the array.
+
+        Returns
+        -------
+        np.ndarray
+           np.float32 or np.float64 unpacked symmetric matrix.
+
+        Raises
+        ------
+        ValueError
+            If the header does not contain information in the expected format
+            encoded by Kaldi.
+        """
+        # Header containing data type.
+        header = self.readBytes(3).decode()
+
+        if header == 'FP ':
+            sampleSize = 4  # float
+            matType = np.float32
+        elif header == 'DP ':
+            sampleSize = 8  # double
+            matType = np.float64
+        else:
+            raise ValueError(f"unknown header for matrix type '{header}'")
+
+        assert sampleSize > 0
+
+        rows = self.readInt()
+        if rows == 0:
+            return np.zeros((rows, rows), dtype=matType)
+
+        # Read the packed matrix.
+        numElems = ((rows + 1) * rows) // 2
+        buf = self.readBytes(numElems * sampleSize)
+        symMat = np.frombuffer(buf, dtype=matType)
+
+        # Unpack the data into a full symmetric matrix.
+        fullMat = np.zeros((rows, rows), dtype=symMat.dtype)
+        k = 0
+        for i in range(rows):
+            for j in range(i + 1):
+                fullMat[i, j] = symMat[k]
+                fullMat[j, i] = symMat[k]
+                k = k + 1
+
+        return fullMat

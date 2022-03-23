@@ -1,0 +1,4 @@
+numGauss=4
+featDim=2
+ivecDim=4
+priorOffset=10.0
